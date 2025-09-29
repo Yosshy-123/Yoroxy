@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ふりかけ</title>
+</head>
+<body>
+  <header>
+    <div class="banner">
+      <button class="btn btn-link" onclick="window.location.href='/'">ホーム🏠</button>
+      <button class="btn btn-link" onclick="window.location.href='/blog'">お知らせ</button>
+      <form class="d-flex" action="/s">
+        <input type="text" name="q" class="form-control" placeholder="キーワードを入力..." required>
+      </form>
+      <button class="btn btn-link" style="position: absolute; right: 10px;" onclick="window.location.href='/send'">問い合わせ</button>
+    </div>
+  </header>
+  <br><br>
+    <h1>YouTubeのURLを入力</h1>
+  <form id="urlForm2">
+    <input type="text" id="youtubeUrl" placeholder="YouTubeのURLを入力..." required>
+    <button type="submit" name="action" value="watch">再生！</button>
+    <button type="submit" name="action" value="comment">コメントのみを表示</button>
+    <br><br>
+</form>
+
+<script>
+    document.getElementById('urlForm2').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const url = document.getElementById('youtubeUrl').value;
+        const videoId = extractVideoId(url);
+        if (videoId) {
+            const action = event.submitter.value;
+            if (action === 'watch') {
+                window.location.href = `/w/${videoId}`;
+            } else if (action === 'comment') {
+                window.location.href = `/tool/n/comment/${videoId}`;
+            } else {
+                alert('Invalid action type');
+            }
+        } else {
+            alert('Invalid YouTube URL');
+        }
+    });
+
+    function extractVideoId(url) {
+        const regExp = /^.*(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[1].length == 11) ? match[1] : null;
+    }
+    </script>
+</body>
+</html>
