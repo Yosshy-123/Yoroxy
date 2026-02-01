@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="title" content="Yoroxy" />
+  <meta name="description" content="A fast, simple, and highly customizable proxy." />
+  <title>Yoroxy</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+  <div id="background" aria-hidden="true"></div>
+
+  <div class="app-root">
+    <main>
+      <div class="center-panel">
+        <div class="card" role="region" aria-labelledby="brand-title">
+          <div class="card-header">
+            <div class="brand" id="brand-title">
+              <span class="text">Yoroxy</span>
+            </div>
+          </div>
+
+          <div class="search-area">
+            <form id="uv-form" class="searchbar" role="search" autocomplete="off">
+              <div class="icon" aria-hidden="true">
+                <img src="/assets/images/search.svg" width="22" height="22" aria-hidden="true" focusable="false" />
+              </div>
+
+              <input
+                id="uv-address"
+                name="q"
+                type="search"
+                class="search-input"
+                maxlength="2048"
+                autocapitalize="off"
+                autocomplete="off"
+                role="combobox"
+                aria-label="検索"
+                placeholder="Search anything (URL or query)"
+              />
+            </form>
+          </div>
+
+          <div class="blob" aria-hidden="true"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/uv/uv.bundle.js"></script>
+  <script src="/uv/uv.config.js"></script>
+  <script src="/assets/js/main.js"></script>
+</body>
+</html>
