@@ -1,7 +1,7 @@
 "use strict";
 
 /* ===============================
-   DOM references (HTML準拠)
+   DOM references
 =============================== */
 
 const form = document.getElementById("uv-form");
@@ -69,7 +69,7 @@ function resolveInput(value) {
 }
 
 /* ===============================
-   Service Worker (Ultraviolet)
+   Service Worker
 =============================== */
 
 if ("serviceWorker" in navigator && form && address) {

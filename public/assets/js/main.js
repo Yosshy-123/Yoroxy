@@ -108,7 +108,7 @@ function closeFullscreen() {
 }
 
 /* ===============================
-   Cloak window (Yoroxy仕様)
+   Cloak window
 =============================== */
 
 function openGame() {
