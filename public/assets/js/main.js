@@ -1,17 +1,22 @@
 "use strict";
 
-const SEARCH_TEMPLATE = "https://duckduckgo.com/?q=%s";
-const XOR_KEY = 2;
+/* ===============================
+   DOM references
+=============================== */
 
 const form = document.getElementById("uv-form");
 const address = document.getElementById("uv-address");
+
+/* ===============================
+   Autofocus
+=============================== */
 
 function applyAutofocus() {
     if (!address) return;
     try {
         address.focus({ preventScroll: true });
     } catch {
-        try { address.focus(); } catch {}
+        address.focus();
     }
 }
 
@@ -21,84 +26,80 @@ if (document.readyState === "loading") {
     applyAutofocus();
 }
 
-class Crypt {
+/* ===============================
+   Base64 URL-safe obfuscation
+=============================== */
+
+class crypts {
     static encode(str) {
-        return encodeURIComponent(
-            String(str)
-                .split("")
-                .map((c, i) => (i % 2 ? String.fromCharCode(c.charCodeAt(0) ^ XOR_KEY) : c))
-                .join("")
-        );
+        const utf8 = new TextEncoder().encode(String(str));
+        let binary = "";
+        for (const b of utf8) binary += String.fromCharCode(b);
+        return btoa(binary)
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
     }
 
     static decode(str) {
-        return decodeURIComponent(
-            String(str)
-                .split("")
-                .map((c, i) => (i % 2 ? String.fromCharCode(c.charCodeAt(0) ^ XOR_KEY) : c))
-                .join("")
-        );
+        if (!str) return "";
+        str = str.replace(/-/g, "+").replace(/_/g, "/");
+        while (str.length % 4) str += "=";
+        const binary = atob(str);
+        const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
     }
 }
 
+/* ===============================
+   URL / Search resolver
+=============================== */
+
 function resolveInput(value) {
     const input = String(value || "").trim();
+    const searchTemplate = "https://duckduckgo.com/?q=%s";
+
     if (!input) return "";
 
     try {
-        const url = new URL(input);
-        if (url.protocol === "http:" || url.protocol === "https:") {
-            return url.toString();
-        }
-        return "";
+        return new URL(input).toString();
     } catch {}
 
     try {
-        const maybeUrl = new URL("http://" + input);
-        if (maybeUrl.hostname && (maybeUrl.hostname.includes(".") || maybeUrl.hostname === "localhost")) {
-            return maybeUrl.toString();
+        const hostPortPattern = /^([a-zA-Z0-9.-]+|\d{1,3}(?:\.\d{1,3}){3}):\d{1,5}(\/.*)?$/;
+        if (hostPortPattern.test(input)) {
+            return new URL("http://" + input).toString();
         }
     } catch {}
 
-    return SEARCH_TEMPLATE.replace("%s", encodeURIComponent(input));
+    /* 3. 検索 */
+    return searchTemplate.replace("%s", encodeURIComponent(input));
 }
 
+/* ===============================
+   Service Worker (Ultraviolet)
+=============================== */
+
 if ("serviceWorker" in navigator && form && address) {
-    const proxySetting = "uv";
+    const config = globalThis.__uv$config;
 
-    const swMap = {
-        uv: {
-            file: "/uv/sw.js",
-            config: globalThis.__uv$config
-        }
-    };
-
-    const sw = swMap[proxySetting];
-
-    if (!sw || !sw.config) {
+    if (!config || !config.prefix) {
         console.error("[Yoroxy] UV config not found");
     } else {
         navigator.serviceWorker
-            .register(sw.file, { scope: sw.config.prefix })
-            .then(() => navigator.serviceWorker.ready)
+            .register("/uv/sw.js", { scope: config.prefix })
             .then(() => {
-                const prefix = String(sw.config.prefix || "/");
-                const safePrefix = prefix.endsWith("/") ? prefix : prefix + "/";
+                console.log("[Yoroxy] ServiceWorker registered");
 
-                const onSubmit = (e) => {
+                form.addEventListener("submit", (e) => {
                     e.preventDefault();
-                    try {
-                        const resolved = resolveInput(address.value);
-                        if (!resolved) return;
-                        const encoded = safePrefix + Crypt.encode(resolved);
-                        window.location.assign(encoded);
-                    } catch (err) {
-                        console.error("[Yoroxy] submit handler error:", err);
-                    }
-                };
 
-                form.removeEventListener("submit", onSubmit);
-                form.addEventListener("submit", onSubmit);
+                    const resolved = resolveInput(address.value);
+                    if (!resolved) return;
+
+                    const encoded = config.prefix + crypts.encode(resolved);
+                    window.location.href = encoded;
+                });
             })
             .catch((err) => {
                 console.error("[Yoroxy] ServiceWorker failed:", err);
