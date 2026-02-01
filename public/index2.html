@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Redirecting...</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    button {
+      padding: 0.5em 1em;
+      font-size: 1em;
+      cursor: pointer;
+      margin-top: 1em;
+    }
+  </style>
+</head>
+<body>
+  <p>Redirecting...</p>
+  <button id="goButton" style="display:none;">Go</button>
+
+  <script>
+    let embedHtml = '';
+
+    function openProxyTab() {
+      const tab = window.open('about:blank', '_blank');
+      if (tab) {
+        tab.document.open();
+
+        const baseUrl = location.origin;
+        const htmlWithBase = embedHtml.replace(
+          /<head>/i,
+          `<head><base href="${baseUrl}">`
+        );
+
+        tab.document.write(htmlWithBase);
+        tab.document.close();
+        return true;
+      }
+      return false;
+    }
+
+    fetch('/embed.html')
+      .then(res => res.text())
+      .then(html => {
+        embedHtml = html;
+
+        const opened = openProxyTab();
+
+        if (!opened) {
+          const button = document.getElementById('goButton');
+          button.style.display = 'inline-block';
+          button.addEventListener('click', () => openProxyTab());
+        }
+
+        window.location.replace('https://www.google.com');
+      })
+  </script>
+</body>
+</html>

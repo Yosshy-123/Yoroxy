@@ -3,64 +3,53 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Redirecting...</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    button {
-      padding: 0.5em 1em;
-      font-size: 1em;
-      cursor: pointer;
-      margin-top: 1em;
-    }
-  </style>
+  <meta name="title" content="Yoroxy" />
+  <meta name="description" content="A fast, simple, and highly customizable proxy." />
+  <title>Yoroxy</title>
+  <link rel="stylesheet" href="/assets/css/style.css" />
 </head>
 <body>
-  <p>Redirecting...</p>
-  <button id="goButton" style="display:none;">Go</button>
+  <div id="background" aria-hidden="true"></div>
 
-  <script>
-    let embedHtml = '';
+  <div class="app-root">
+    <main>
+      <div class="center-panel">
+        <div class="card" role="region" aria-labelledby="brand-title">
+          <div class="card-header">
+            <div class="brand" id="brand-title">
+              <span class="text">Yoroxy</span>
+            </div>
+          </div>
 
-    function openProxyTab() {
-      const tab = window.open('about:blank', '_blank');
-      if (tab) {
-        tab.document.open();
+          <div class="search-area">
+            <form id="uv-form" class="searchbar" role="search" autocomplete="off">
+              <div class="icon" aria-hidden="true">
+                <img src="/assets/images/search.svg" width="22" height="22" aria-hidden="true" focusable="false" />
+              </div>
 
-        const baseUrl = location.origin;
-        const htmlWithBase = embedHtml.replace(
-          /<head>/i,
-          `<head><base href="${baseUrl}">`
-        );
+              <input
+                id="uv-address"
+                name="q"
+                type="search"
+                class="search-input"
+                maxlength="2048"
+                autocapitalize="off"
+                autocomplete="off"
+                role="combobox"
+                aria-label="検索"
+                placeholder="Search anything (URL or query)"
+              />
+            </form>
+          </div>
 
-        tab.document.write(htmlWithBase);
-        tab.document.close();
-        return true;
-      }
-      return false;
-    }
+          <div class="blob" aria-hidden="true"></div>
+        </div>
+      </div>
+    </main>
+  </div>
 
-    fetch('/embed.html')
-      .then(res => res.text())
-      .then(html => {
-        embedHtml = html;
-
-        const opened = openProxyTab();
-
-        if (!opened) {
-          const button = document.getElementById('goButton');
-          button.style.display = 'inline-block';
-          button.addEventListener('click', () => openProxyTab());
-        }
-
-        window.location.replace('https://www.google.com');
-      })
-  </script>
+  <script src="/uv/uv.bundle.js"></script>
+  <script src="/uv/uv.config.js"></script>
+  <script src="/assets/js/main.js"></script>
 </body>
 </html>
