@@ -172,7 +172,6 @@ body{
   height: 260px;
   border-radius: 48%;
   filter: blur(40px) saturate(120%);
-  background: radial-gradient(circle at 30% 30%, rgba(79,156,255,0.36), transparent 60%), linear-gradient(135deg, var(--primary), var(--primary-600));
   opacity: 0.12;
   pointer-events: none;
   transform: translate3d(0,0,0);
