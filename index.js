@@ -12,7 +12,7 @@ const bareServer = createBareServer('/bare/');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(ROOT_DIR, 'public')));
-app.use('/uv', express.static(path.join(ROOT_DIR, 'uv')));
+app.use('/uv', express.static(path.join(ROOT_DIR, 'public', 'uv')));
 
 app.get('*', (req, res, next) => {
   if (req.method !== 'GET') return next();
