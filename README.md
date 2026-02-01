@@ -28,8 +28,8 @@
 │   │   ├── uv.handler.js.map
 │   │   ├── uv.sw.js
 │   │   └── uv.sw.js.map
-│   ├── embed.html
 │   ├── index.html
+│   ├── proxy-frame.html
 │   └── proxy.html
 ├── index.js
 ├── LICENSE
