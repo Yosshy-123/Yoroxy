@@ -105,7 +105,7 @@
     }
 
     const proxySetting = "uv";
-    const swMap = { uv: { file: "/uv/sw.js", config: uvConfig } };
+    const swMap = { uv: { file: "/uv/uv.sw.js", config: uvConfig } };
     const sw = swMap[proxySetting];
 
     if (!sw) {
