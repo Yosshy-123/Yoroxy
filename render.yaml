@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: yoroxy
+    env: node
+    plan: free
+    repo: https://github.com/Yosshy-Tech-Club/Yoroxy.git
+    branch: main
+    region: oregon
+    autoDeploy: true
+    buildCommand: npm install
+    startCommand: npm start
