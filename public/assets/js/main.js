@@ -135,7 +135,7 @@
           }
 
           try {
-            const encoded = sw.config.prefix + Base64.encode(resolved);
+            const encoded = "/p/" + Base64.encode(resolved);
             console.debug("[Yoroxy] Navigating to:", encoded);
             window.location.href = encoded;
           } catch (err) {
