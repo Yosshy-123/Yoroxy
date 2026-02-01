@@ -3,7 +3,7 @@ services:
     name: yoroxy
     env: node
     plan: free
-    repo: https://github.com/Yosshy-Tech-Club/Yoroxy.git
+    repo: https://github.com/Yosshy-123/Yoroxy.git
     branch: main
     region: oregon
     autoDeploy: true
