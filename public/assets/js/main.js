@@ -7,9 +7,23 @@
 const form = document.getElementById("uv-form");
 const address = document.getElementById("uv-address");
 
-/* 要素が存在しない場合は何もしない */
-if (!form || !address) {
-    console.warn("[Yoroxy] uv-form or uv-address not found");
+/* ===============================
+   Autofocus
+=============================== */
+
+function applyAutofocus() {
+    if (!address) return;
+    try {
+        address.focus({ preventScroll: true });
+    } catch {
+        address.focus();
+    }
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyAutofocus);
+} else {
+    applyAutofocus();
 }
 
 /* ===============================
