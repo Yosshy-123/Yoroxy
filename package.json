@@ -12,7 +12,7 @@
   "scripts": {
     "start": "node index.js"
   },
-  "license": "GPL-3.0-or-later",
+  "license": "MIT",
   "dependencies": {
   "@tomphttp/bare-server-node": "2.0.3",
     "cors": "^2.8.5",
