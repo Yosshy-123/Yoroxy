@@ -20,5 +20,12 @@
 </head>
 <body>
   <iframe src="/proxy.html"></iframe>
+
+  <script>
+    window.addEventListener('beforeunload', (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    });
+  </script>
 </body>
 </html>
