@@ -12,15 +12,12 @@
 ├── public/
 │   ├── assets/
 │   │   ├── css/
+│   │   │   ├── frame.css
 │   │   │   └── style.css
-│   │   ├── frame/
-│   │   │   ├── css/
-│   │   │   │   └── style.css
-│   │   │   └── js/
-│   │   │       └── main.js
 │   │   ├── images/
 │   │   │   └── search.svg
 │   │   └── js/
+│   │       ├── frame.js
 │   │       └── main.js
 │   ├── uv/
 │   │   ├── sw.js
