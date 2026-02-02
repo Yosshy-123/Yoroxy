@@ -10,6 +10,6 @@ self.__uv$config = {
     config: '/uv/uv.config.js',
     sw: '/uv/uv.sw.js',
     inject: [
-        '/assets/js/block-all-newtabs.js',
+        '/assets/js/helper-block-newtabs.js',
     ],
 };
