@@ -70,16 +70,14 @@ function shutdown() {
     console.log("Shutting down...");
     server.close((err) => {
         if (err) {
-            console.error("Error closing HTTP server:", err);
+            console.error("Error closing server:", err);
             process.exit(1);
         }
         try {
             if (typeof bareServer.close === "function") {
                 bareServer.close();
             }
-        } catch (e) {
-            console.warn("bareServer.close() threw:", e);
-        }
+        } catch {}
         process.exit(0);
     });
 }
