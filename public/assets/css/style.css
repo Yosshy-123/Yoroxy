@@ -1,4 +1,3 @@
-/* ===== Theme variables ===== */
 :root{
   --bg-1: #f6f9fc;
   --bg-2: #eef4fb;
@@ -16,7 +15,6 @@
   --dur-base: 320ms;
 }
 
-/* Dark scheme adjustments */
 @media (prefers-color-scheme: dark){
   :root{
     --bg-1: #071026;
@@ -29,7 +27,6 @@
   }
 }
 
-/* ===== Base (mobile-first) ===== */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body{
@@ -45,7 +42,6 @@ body{
   justify-content: center;
 }
 
-/* Background element for optional image/gradient */
 #background{
   position: fixed;
   inset: 0;
@@ -55,7 +51,6 @@ body{
   pointer-events: none;
 }
 
-/* App container */
 .app-root{
   width: 100%;
   max-width: 1100px;
@@ -63,7 +58,6 @@ body{
   margin: 0 auto;
 }
 
-/* Centering panel */
 .center-panel{
   width: 100%;
   display: flex;
@@ -73,7 +67,6 @@ body{
   padding: 12px;
 }
 
-/* ===== Card ===== */
 .card{
   width: 100%;
   max-width: 780px;
@@ -93,7 +86,6 @@ body{
   box-shadow: var(--shadow-strong);
 }
 
-/* Card header (Yoroxy text only) */
 .card-header{
   display: flex;
   align-items: center;
@@ -113,14 +105,12 @@ body{
   line-height: 1;
 }
 
-/* ===== Search area ===== */
 .search-area{
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* Searchbar (form) */
 .searchbar{
   display: flex;
   align-items: center;
@@ -147,7 +137,6 @@ body{
   opacity: 0.95;
 }
 
-/* Input */
 .search-input{
   flex: 1;
   width: 100%;
@@ -163,7 +152,6 @@ body{
   opacity: 0.9;
 }
 
-/* Decorative blob */
 .blob{
   position: absolute;
   right: -6%;
@@ -177,7 +165,6 @@ body{
   transform: translate3d(0,0,0);
 }
 
-/* Accessibility */
 .visually-hidden{
   position: absolute;
   height: 1px;
@@ -190,8 +177,6 @@ body{
   margin: -1px;
 }
 
-/* ===== Responsive adjustments ===== */
-/* tablet and up: horizontal layout */
 @media (min-width: 640px){
   .card{
     padding: 20px;
@@ -211,7 +196,6 @@ body{
   }
 }
 
-/* desktop */
 @media (min-width: 980px){
   .card{
     max-width: 900px;
@@ -221,7 +205,6 @@ body{
   .search-input{ font-size: 20px; }
 }
 
-/* small screens: hide decorative blob to reduce noise */
 @media (max-width: 420px){
   .blob{ display: none; }
   .card{ padding: 14px; }

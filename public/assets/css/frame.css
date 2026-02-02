@@ -22,7 +22,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Top bar */
 .topbar {
   height: var(--bar-height);
   min-height: var(--bar-height);
@@ -36,7 +35,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Home button */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -60,7 +58,6 @@ body {
   outline-offset: 2px;
 }
 
-/* iframe fills remaining space */
 .frame-wrap {
   height: calc(100% - var(--bar-height));
   flex: 1 1 auto;
