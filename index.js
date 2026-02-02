@@ -1,84 +1,54 @@
-import express from "express";
-import http from "node:http";
-import path from "node:path";
-import cors from "cors";
+import express from 'express';
+import http from 'node:http';
 import { createBareServer } from "@tomphttp/bare-server-node";
+import cors from 'cors';
+import path from 'node:path';
+import { hostname } from "node:os"
 
+const server = http.createServer();
+const app = express(server);
 const __dirname = process.cwd();
+const bareServer = createBareServer('/bare/');
 const PORT = process.env.PORT || 8080;
 
-/* ===============================
-   Servers
-=============================== */
-
-const bareServer = createBareServer("/bare/");
-const app = express();
-const server = http.createServer(app);
-
-/* ===============================
-   Middleware
-=============================== */
-
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname + '/public'));
+app.use("uv", express.static(__dirname + '/uv'));
+app.use(cors());
 
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/uv", express.static(__dirname + '/public/uv'));
 
-/* ===============================
-   Routes
-=============================== */
-
-app.get("/", (_req, res) => {
-    res.sendFile(path.join(__dirname, "public/index.html"));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(process.cwd(), '/public/index.html'));
 });
 
-/* ===============================
-   HTTP handling (bare-server routing)
-=============================== */
+server.on('request', (req, res) => {
+  if (bareServer.shouldRoute(req)) {
+    bareServer.routeRequest(req, res)
+  } else {
+    app(req, res)
+  }
+})
 
-server.on("request", (req, res) => {
-    if (bareServer.shouldRoute(req)) {
-        bareServer.routeRequest(req, res);
-    }
-});
+server.on('upgrade', (req, socket, head) => {
+  if (bareServer.shouldRoute(req)) {
+    bareServer.routeUpgrade(req, socket, head)
+  } else {
+    socket.end()
+  }
+})
 
-server.on("upgrade", (req, socket, head) => {
-    if (bareServer.shouldRoute(req)) {
-        bareServer.routeUpgrade(req, socket, head);
-    } else {
-        socket.end();
-    }
-});
+server.on('listening', () => {
+  const address = server.address();
+})
 
-/* ===============================
-   Startup
-=============================== */
-
-server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-});
-
-/* ===============================
-   Graceful shutdown
-=============================== */
-
-function shutdown() {
-    console.log("Shutting down...");
-    server.close((err) => {
-        if (err) {
-            console.error("Error closing server:", err);
-            process.exit(1);
-        }
-        try {
-            if (typeof bareServer.close === "function") {
-                bareServer.close();
-            }
-        } catch {}
-        process.exit(0);
-    });
-}
+server.listen({ port: PORT, })
 
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
+
+function shutdown() {
+  server.close();
+  bareServer.close();
+  process.exit(0);
+}

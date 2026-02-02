@@ -27,25 +27,55 @@ if (document.readyState === "loading") {
 }
 
 /* ===============================
+   Simple obfuscation (Ultraviolet)
+=============================== */
+
+class crypts {
+    static encode(str) {
+        return encodeURIComponent(
+            String(str)
+                .split("")
+                .map((c, i) =>
+                    i % 2 ? String.fromCharCode(c.charCodeAt(0) ^ 2) : c
+                )
+                .join("")
+        );
+    }
+
+    static decode(str) {
+        if (str.endsWith("/")) str = str.slice(0, -1);
+        return decodeURIComponent(
+            str
+                .split("")
+                .map((c, i) =>
+                    i % 2 ? String.fromCharCode(c.charCodeAt(0) ^ 2) : c
+                )
+                .join("")
+        );
+    }
+}
+
+/* ===============================
    URL / Search resolver
 =============================== */
 
 function resolveInput(value) {
     const input = value.trim();
-    const searchTemplate = "http://duckduckgo.com/?q=%s";
-
     if (!input) return "";
 
-    try {
-        return new URL(input).toString();
-    } catch {}
+    const searchTemplate = "https://duckduckgo.com/?q=%s";
 
-    try {
-        const url = new URL("http://" + input);
-        if (url.hostname.includes(".")) {
-            return url.toString();
-        }
-    } catch {}
+    const urlPattern = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+    if (urlPattern.test(input)) {
+        return input;
+    }
+
+    const hostPattern =
+        /^((\d{1,3}\.){3}\d{1,3}|([a-z0-9-]+\.)+[a-z]{2,})(:\d+)?(\/.*)?$/i;
+
+    if (hostPattern.test(input)) {
+        return "http://" + input;
+    }
 
     return searchTemplate.replace("%s", encodeURIComponent(input));
 }
@@ -80,7 +110,7 @@ if ("serviceWorker" in navigator && form && address) {
                     if (!resolved) return;
 
                     const encoded =
-                        sw.config.prefix + encodeURIComponent(resolved);
+                        sw.config.prefix + crypts.encode(resolved);
 
                     window.location.href = encoded;
                 });
