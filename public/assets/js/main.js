@@ -27,31 +27,6 @@ if (document.readyState === "loading") {
 }
 
 /* ===============================
-   Base64 URL-safe obfuscation
-=============================== */
-
-class crypts {
-    static encode(str) {
-        const utf8 = new TextEncoder().encode(String(str));
-        let binary = "";
-        for (const b of utf8) binary += String.fromCharCode(b);
-        return btoa(binary)
-            .replace(/\+/g, "-")
-            .replace(/\//g, "_")
-            .replace(/=+$/, "");
-    }
-
-    static decode(str) {
-        if (!str) return "";
-        str = str.replace(/-/g, "+").replace(/_/g, "/");
-        while (str.length % 4) str += "=";
-        const binary = atob(str);
-        const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
-        return new TextDecoder().decode(bytes);
-    }
-}
-
-/* ===============================
    URL / Search resolver
 =============================== */
 
@@ -66,13 +41,14 @@ function resolveInput(value) {
     } catch {}
 
     try {
-        const hostPortPattern = /^([a-zA-Z0-9.-]+|\d{1,3}(?:\.\d{1,3}){3}):\d{1,5}(\/.*)?$/;
+        const hostPortPattern =
+            /^([a-zA-Z0-9.-]+|\d{1,3}(?:\.\d{1,3}){3}):\d{1,5}(\/.*)?$/;
+
         if (hostPortPattern.test(input)) {
             return new URL("http://" + input).toString();
         }
     } catch {}
 
-    /* 3. 検索 */
     return searchTemplate.replace("%s", encodeURIComponent(input));
 }
 
@@ -97,7 +73,9 @@ if ("serviceWorker" in navigator && form && address) {
                     const resolved = resolveInput(address.value);
                     if (!resolved) return;
 
-                    const encoded = config.prefix + crypts.encode(resolved);
+                    const encoded =
+                        config.prefix + encodeURIComponent(resolved);
+
                     window.location.href = encoded;
                 });
             })
