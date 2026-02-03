@@ -13,6 +13,7 @@ function applyAutofocus() {
     address.focus();
   }
 }
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", applyAutofocus);
 } else {
@@ -23,9 +24,9 @@ class crypts {
   static encode(str) {
     return encodeURIComponent(
       String(str)
-      .split("")
-      .map((c, i) => i % 2 ? String.fromCharCode(c.charCodeAt(0) ^ 2) : c)
-      .join("")
+        .split("")
+        .map((c, i) => i % 2 ? String.fromCharCode(c.charCodeAt(0) ^ 2) : c)
+        .join("")
     );
   }
 }
@@ -43,16 +44,33 @@ function resolveInput(v) {
 (function() {
   const style = document.createElement("style");
   style.textContent = `
-#uv-loading{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.6);z-index:99999}
-#uv-loading svg{width:56px;height:56px;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-`;
+    #uv-loading {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, .6);
+      z-index: 99999;
+    }
+    #uv-loading svg {
+      width: 56px;
+      height: 56px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  `;
   document.head.appendChild(style);
   const d = document.createElement("div");
   d.id = "uv-loading";
   d.innerHTML = `<svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#333" stroke-width="4" stroke-dasharray="90 30"/></svg>`;
   document.body.appendChild(d);
 })();
+
 const showLoading = () => document.getElementById("uv-loading").style.display = "flex";
 const hideLoading = () => document.getElementById("uv-loading").style.display = "none";
 
@@ -89,9 +107,9 @@ function fetchWithTimeout(url) {
     const c = new AbortController();
     const t = setTimeout(() => c.abort(), PROBE_TIMEOUT);
     fetch(url, {
-        signal: c.signal,
-        cache: "no-store"
-      })
+      signal: c.signal,
+      cache: "no-store"
+    })
       .then(r => {
         clearTimeout(t);
         res(r);
@@ -103,19 +121,42 @@ function fetchWithTimeout(url) {
   });
 }
 
-async function getSearxUrls(q) {
+const SEARX_INSTANCES_API = "https://searx.space/data/instances.json";
+const SEARX_MAX_INSTANCES = 2;
+
+async function getSearxUrls(query) {
   try {
-    const r = await fetch("https://searx.space/data/instances.json", {
+    const res = await fetch(SEARX_INSTANCES_API, {
       cache: "no-store"
     });
-    const j = await r.json();
-    const arr = j.online_https || j.online || [];
-    return arr
-      .slice(0, 2)
-      .map(i => i.url.replace(/\/$/, "") + "/search?q=" + q);
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const bases = extractSearxInstances(data);
+
+    return bases.map(base => buildSearxSearchUrl(base, query));
   } catch {
     return [];
   }
+}
+
+function extractSearxInstances(data) {
+  const list =
+    Array.isArray(data.online_https) ? data.online.https :
+    Array.isArray(data.online) ? data.online :
+    [];
+
+  return list
+    .map(i => normalizeSearxBase(i.url))
+    .slice(0, SEARX_MAX_INSTANCES);
+}
+
+function normalizeSearxBase(url) {
+  return url.replace(/\/+$/, "");
+}
+
+function buildSearxSearchUrl(base, query) {
+  return `${base}/search?q=${query}`;
 }
 
 async function handleProxy(e) {
@@ -131,8 +172,25 @@ async function handleProxy(e) {
     return;
   }
 
-  const first = SEARCH_TEMPLATES[0].replace("%s", encodeURIComponent(raw));
-  redirect(first);
+  const q = encodeURIComponent(raw);
+
+  for (const tpl of SEARCH_TEMPLATES) {
+    if (tpl === "SEARX") {
+      try {
+        const searxUrls = await getSearxUrls(q);
+        if (searxUrls.length) {
+          redirect(searxUrls[0]);
+          return;
+        }
+      } catch {}
+      continue;
+    }
+
+    if (tpl.includes("%s")) {
+      redirect(tpl.replace("%s", q));
+      return;
+    }
+  }
 }
 
 if (form && address && sw.config && sw.config.prefix) {
