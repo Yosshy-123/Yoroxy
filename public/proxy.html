@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -10,19 +10,25 @@
   <div id="background" aria-hidden="true"></div>
 
   <div class="app-root">
-    <main>
-      <div class="center-panel">
+    <main class="layout">
+      <section class="center-panel">
         <div class="card" role="region" aria-labelledby="brand-title">
-          <div class="card-header">
+          <header class="card-header">
             <div class="brand" id="brand-title">
               <span class="text">Yoroxy</span>
             </div>
-          </div>
+          </header>
 
           <div class="search-area">
             <form id="uv-form" class="searchbar" role="search" autocomplete="off">
               <div class="icon" aria-hidden="true">
-                <img src="/assets/images/search.svg" width="22" height="22" aria-hidden="true" focusable="false" />
+                <img
+                  src="/assets/images/search.svg"
+                  width="20"
+                  height="20"
+                  alt=""
+                  aria-hidden="true"
+                />
               </div>
 
               <input
@@ -30,19 +36,16 @@
                 name="q"
                 type="search"
                 class="search-input"
-                maxlength="2048"
                 autocapitalize="off"
                 autocomplete="off"
-                role="combobox"
+                enterkeyhint="search"
                 aria-label="検索"
-                placeholder="Search anything (URL or query)"
+                placeholder="Search URL or keyword…"
               />
             </form>
           </div>
-
-          <div class="blob" aria-hidden="true"></div>
         </div>
-      </div>
+      </section>
     </main>
   </div>
 

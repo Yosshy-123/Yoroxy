@@ -27,60 +27,61 @@
   }
 }
 
-* { box-sizing: border-box; }
-html, body { height: 100%; }
+*{ box-sizing: border-box; }
+html, body{ height: 100%; }
+
 body{
   margin: 0;
-  min-height: 100vh;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   color: var(--text);
   background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
 #background{
   position: fixed;
   inset: 0;
   z-index: -2;
-  background-size: cover;
-  background-position: center;
   pointer-events: none;
 }
 
 .app-root{
   width: 100%;
-  max-width: 1100px;
-  padding: 20px;
-  margin: 0 auto;
+  max-width: 1200px;
+  padding: clamp(16px, 4vw, 32px);
+}
+
+.layout{
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .center-panel{
   width: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 40px);
-  padding: 12px;
 }
 
 .card{
   width: 100%;
-  max-width: 780px;
+  max-width: 880px;
   background: var(--glass);
   border-radius: calc(var(--radius) + 2px);
-  padding: 16px;
+  padding: clamp(16px, 3vw, 24px);
   box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(12px) saturate(120%);
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  align-items: stretch;
-  transition: transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease);
+  gap: 16px;
+  transition:
+    transform var(--dur-base) var(--ease),
+    box-shadow var(--dur-base) var(--ease);
 }
+
 .card:focus-within{
   transform: translateY(-4px);
   box-shadow: var(--shadow-strong);
@@ -89,124 +90,68 @@ body{
 .card-header{
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
 }
+
 .brand{
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--muted);
-}
-.brand .text{
   font-weight: 600;
-  color: var(--primary-600);
   font-size: 1rem;
-  line-height: 1;
+  color: var(--primary-600);
 }
 
 .search-area{
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  width: 100%;
 }
 
 .searchbar{
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78));
-  padding: 8px 12px;
+  padding: clamp(10px, 2vw, 14px);
   border-radius: 999px;
-  border: 1px solid rgba(72,123,255,0.06);
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.95),
+    rgba(255,255,255,0.82)
+  );
+  border: 1px solid rgba(79,156,255,0.12);
 }
-.searchbar .icon{
-  width: 20px;
-  height: 20px;
+
+.searchbar:focus-within{
+  border-color: var(--primary);
+}
+
+.icon{
   flex: 0 0 20px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.searchbar .icon svg{
-  width: 18px;
-  height: 18px;
-  display: block;
-  fill: var(--muted);
-  opacity: 0.95;
-}
 
 .search-input{
   flex: 1;
-  width: 100%;
   border: none;
   background: transparent;
   outline: none;
-  font-size: 16px;
-  padding: 8px 4px;
+  font-size: clamp(15px, 2.5vw, 20px);
   color: var(--text);
 }
+
 .search-input::placeholder{
   color: var(--muted);
-  opacity: 0.9;
 }
 
-.blob{
-  position: absolute;
-  right: -6%;
-  top: -8%;
-  width: 360px;
-  height: 260px;
-  border-radius: 48%;
-  filter: blur(40px) saturate(120%);
-  opacity: 0.12;
-  pointer-events: none;
-  transform: translate3d(0,0,0);
-}
-
-.visually-hidden{
-  position: absolute;
-  height: 1px;
-  width: 1px;
-  overflow: hidden;
-  clip: rect(1px,1px,1px,1px);
-  white-space: nowrap;
-  border: 0;
-  padding: 0;
-  margin: -1px;
-}
-
-@media (min-width: 640px){
+@media (min-width: 768px){
   .card{
-    padding: 20px;
-    gap: 16px;
     flex-direction: row;
     align-items: center;
   }
-  .search-area{ flex: 1; }
-  .searchbar{ padding: 10px 14px; }
-  .search-input{ font-size: 18px; }
-  .blob{
-    right: -8%;
-    top: -12%;
-    width: 420px;
-    height: 320px;
-    opacity: 0.14;
-  }
-}
 
-@media (min-width: 980px){
-  .card{
-    max-width: 900px;
-    padding: 24px;
-    box-shadow: var(--shadow-strong);
+  .card-header{
+    margin-right: 16px;
   }
-  .search-input{ font-size: 20px; }
-}
 
-@media (max-width: 420px){
-  .blob{ display: none; }
-  .card{ padding: 14px; }
-  .search-input{ font-size: 15px; }
+  .search-area{
+    flex: 1;
+  }
 }
