@@ -93,33 +93,6 @@ const sw = {
   config: getUvConfig()
 };
 
-const PROBE_TIMEOUT = 2000;
-
-const SEARCH_TEMPLATES = [
-  "https://duckduckgo.com/?q=%s",
-  "https://duckduckgo.com/html/?q=%s",
-  "https://lite.duckduckgo.com/lite/?q=%s"
-];
-
-function fetchWithTimeout(url) {
-  return new Promise((res, rej) => {
-    const c = new AbortController();
-    const t = setTimeout(() => c.abort(), PROBE_TIMEOUT);
-    fetch(url, {
-      signal: c.signal,
-      cache: "no-store"
-    })
-      .then(r => {
-        clearTimeout(t);
-        res(r);
-      })
-      .catch(e => {
-        clearTimeout(t);
-        rej(e);
-      });
-  });
-}
-
 async function handleProxy(e) {
   e.preventDefault();
   const raw = address.value.trim();
@@ -135,12 +108,34 @@ async function handleProxy(e) {
 
   const q = encodeURIComponent(raw);
 
-  for (const tpl of SEARCH_TEMPLATES) {
-    if (tpl.includes("%s")) {
-      redirect(tpl.replace("%s", q));
-      return;
+  try {
+    const controller = new AbortController();
+    const TIMEOUT_MS = 2500;
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    const r = await fetch("/api/search?q=" + q, {
+      method: "GET",
+      signal: controller.signal,
+      cache: "no-store",
+      headers: { Accept: "application/json" }
+    });
+
+    clearTimeout(timer);
+
+    if (r.ok) {
+      const data = await r.json();
+      if (data && data.url) {
+        redirect(data.url);
+        return;
+      }
+    } else {
+      console.warn("Search API responded non-ok:", r.status);
     }
+  } catch (err) {
+    console.warn("Search API request failed:", err);
   }
+
+  redirect("https://duckduckgo.com/?q=" + q);
 }
 
 if (form && address && sw.config && sw.config.prefix) {
