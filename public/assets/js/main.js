@@ -97,9 +97,8 @@ const PROBE_TIMEOUT = 2000;
 
 const SEARCH_TEMPLATES = [
   "https://duckduckgo.com/?q=%s",
-  "SEARX",
   "https://duckduckgo.com/html/?q=%s",
-  "https://lite.duckduckgo.com/lite/?q=%s",
+  "https://lite.duckduckgo.com/lite/?q=%s"
 ];
 
 function fetchWithTimeout(url) {
@@ -121,42 +120,6 @@ function fetchWithTimeout(url) {
   });
 }
 
-const SEARX_INSTANCES_API = "https://searx.space/data/instances.json";
-const SEARX_MAX_INSTANCES = 2;
-
-async function getSearxUrls(query) {
-  try {
-    const res = await fetch(SEARX_INSTANCES_API, {
-      cache: "no-store"
-    });
-    if (!res.ok) return [];
-
-    const data = await res.json();
-    const bases = extractSearxInstances(data);
-
-    return bases.map(base => buildSearxSearchUrl(base, query));
-  } catch {
-    return [];
-  }
-}
-
-function extractSearxInstances(data) {
-  const list =
-    Array.isArray(data.online_https) ? data.online_https : [];
-
-  return list
-    .map(i => normalizeSearxBase(i.url))
-    .slice(0, SEARX_MAX_INSTANCES);
-}
-
-function normalizeSearxBase(url) {
-  return url.replace(/\/+$/, "");
-}
-
-function buildSearxSearchUrl(base, query) {
-  return `${base}/search?q=${query}`;
-}
-
 async function handleProxy(e) {
   e.preventDefault();
   const raw = address.value.trim();
@@ -173,17 +136,6 @@ async function handleProxy(e) {
   const q = encodeURIComponent(raw);
 
   for (const tpl of SEARCH_TEMPLATES) {
-    if (tpl === "SEARX") {
-      try {
-        const searxUrls = await getSearxUrls(q);
-        if (searxUrls.length) {
-          redirect(searxUrls[0]);
-          return;
-        }
-      } catch {}
-      continue;
-    }
-
     if (tpl.includes("%s")) {
       redirect(tpl.replace("%s", q));
       return;
