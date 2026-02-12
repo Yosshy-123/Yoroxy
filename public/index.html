@@ -19,18 +19,21 @@
       cursor: pointer;
       margin-top: 1em;
     }
+    #message { max-width: 34rem; text-align: center; }
   </style>
 </head>
 <body>
-  <p>Redirecting...</p>
-  <button id="goButton" style="display:none;">Go</button>
+  <p id="message">Redirecting...</p>
+  <button id="goButton" style="display:none;" aria-label="Open proxy tab">Go</button>
 
   <script>
     let frameHtml = '';
 
     function openProxyTab() {
-      const tab = window.open('about:blank', '_blank');
-      if (tab) {
+      try {
+        const tab = window.open('about:blank', '_blank');
+        if (!tab) return false;
+
         tab.document.open();
 
         const baseUrl = location.origin;
@@ -42,25 +45,61 @@
         tab.document.write(htmlWithBase);
         tab.document.close();
         return true;
+      } catch (e) {
+        console.error('openProxyTab error', e);
+        return false;
       }
-      return false;
     }
 
-    fetch('/proxy-frame.html')
-      .then(res => res.text())
-      .then(html => {
-        frameHtml = html;
+    (function init() {
+      const msg = document.getElementById('message');
+      const button = document.getElementById('goButton');
+      const targetRedirect = 'https://www.google.com';
 
-        const opened = openProxyTab();
+      fetch('/proxy-frame.html')
+        .then(res => {
+          if (!res.ok) throw new Error('fetch failed: ' + res.status);
+          return res.text();
+        })
+        .then(html => {
+          frameHtml = html;
 
-        if (!opened) {
-          const button = document.getElementById('goButton');
+          const opened = openProxyTab();
+
+          if (opened) {
+            window.location.replace(targetRedirect);
+          } else {
+            msg.textContent = 'Popup was blocked. Please click the button to open the new tab.';
+            button.style.display = 'inline-block';
+            button.focus();
+
+            const onClick = () => {
+              button.disabled = true;
+              const nowOpened = openProxyTab();
+              if (nowOpened) {
+                window.location.replace(targetRedirect);
+              } else {
+                alert('Popup is still blocked. Please allow popups for this site or open the link manually.');
+                msg.innerHTML = 'Open manually: <a href="/proxy-frame.html" target="_blank" rel="noopener">/proxy-frame.html</a>';
+                button.disabled = false;
+              }
+              button.removeEventListener('click', onClick);
+            };
+
+            button.addEventListener('click', onClick);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to load /proxy-frame.html', err);
+          msg.innerHTML = 'Failed to load content. <br>Open manually: <a href="/proxy-frame.html" target="_blank" rel="noopener">/proxy-frame.html</a>';
           button.style.display = 'inline-block';
-          button.addEventListener('click', () => openProxyTab());
-        }
-
-        window.location.replace('https://www.google.com');
-      })
+          button.addEventListener('click', () => {
+            const tab = window.open('/proxy-frame.html', '_blank');
+            if (tab) window.location.replace(targetRedirect);
+            else alert('Popup is blocked. Please allow popups for this site.');
+          });
+        });
+    })();
   </script>
 </body>
 </html>
