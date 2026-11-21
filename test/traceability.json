@@ -1,0 +1,616 @@
+{
+  "$schema": "informal: FR-ID -> { description, tests }. A test counts only when it passes.",
+  "requirements": [
+    {
+      "id": "FR-TAB-05",
+      "description": "閉じた後の隣接タブ活性化",
+      "tests": [
+        "T-09",
+        "T-42"
+      ]
+    },
+    {
+      "id": "FR-TAB-07",
+      "description": "タブ上限30",
+      "tests": [
+        "T-10",
+        "T-53",
+        "T-54",
+        "T-55"
+      ]
+    },
+    {
+      "id": "FR-TAB-09",
+      "description": "URL/タイトル同期のポーリング",
+      "tests": [
+        "T-56",
+        "T-59"
+      ]
+    },
+    {
+      "id": "FR-TAB-10",
+      "description": "favicon取得",
+      "tests": [
+        "T-57",
+        "T-58"
+      ]
+    },
+    {
+      "id": "FR-TAB-11",
+      "description": "favicon失敗時のフォールバック/スピナー",
+      "tests": [
+        "T-57",
+        "T-58"
+      ]
+    },
+    {
+      "id": "FR-TAB-12",
+      "description": "ドラッグ&ドロップ並替え",
+      "tests": [
+        "T-39",
+        "T-40",
+        "T-41"
+      ]
+    },
+    {
+      "id": "FR-TAB-13",
+      "description": "右クリックメニュー",
+      "tests": [
+        "T-43",
+        "T-44",
+        "T-45",
+        "T-46"
+      ]
+    },
+    {
+      "id": "FR-TAB-14",
+      "description": "ARIA・矢印キー操作",
+      "tests": [
+        "T-47",
+        "T-48",
+        "T-49",
+        "T-50"
+      ]
+    },
+    {
+      "id": "FR-TAB-15",
+      "description": "タイトル/URLのtextContent描画（XSS耐性）",
+      "tests": [
+        "T-70",
+        "T-71"
+      ]
+    },
+    {
+      "id": "FR-TAB-16",
+      "description": "ショートカット Alt+T/W/L/1-9",
+      "tests": [
+        "T-51",
+        "T-52"
+      ]
+    },
+    {
+      "id": "FR-URL-01",
+      "description": "表示は復元済み実URL",
+      "tests": [
+        "T-02",
+        "T-61"
+      ]
+    },
+    {
+      "id": "FR-URL-02",
+      "description": "確定/Escapeでの編集破棄",
+      "tests": [
+        "T-62"
+      ]
+    },
+    {
+      "id": "FR-URL-03",
+      "description": "同一URL再入力での再読込",
+      "tests": [
+        "T-60"
+      ]
+    },
+    {
+      "id": "FR-URL-06",
+      "description": "Reload⇄Stopトグル",
+      "tests": [
+        "T-06",
+        "T-63"
+      ]
+    },
+    {
+      "id": "FR-URL-08",
+      "description": "Alt+Enterで新規タブ",
+      "tests": [
+        "T-64"
+      ]
+    },
+    {
+      "id": "URL-RULE-6",
+      "description": "対応外スキーム（data/file/blob/vbscript/view-source/chrome）",
+      "tests": [
+        "T-04",
+        "T-65"
+      ]
+    },
+    {
+      "id": "URL-RULE-8",
+      "description": "検索置換の安全性（split/join、複数%s）",
+      "tests": [
+        "T-03",
+        "T-66",
+        "T-67"
+      ]
+    },
+    {
+      "id": "FR-SET-22",
+      "description": "エンジン名境界値",
+      "tests": [
+        "T-15",
+        "T-68"
+      ]
+    },
+    {
+      "id": "FR-SET-42",
+      "description": "設定スキーマの欠落補完",
+      "tests": [
+        "T-69"
+      ]
+    },
+    {
+      "id": "FR-NEW-05",
+      "description": "window.open名前解決",
+      "tests": [
+        "T-31",
+        "T-72"
+      ]
+    },
+    {
+      "id": "FR-NEW-07",
+      "description": "window.openの戻り値",
+      "tests": [
+        "T-22",
+        "T-73"
+      ]
+    },
+    {
+      "id": "BRIDGE-POSTMESSAGE",
+      "description": "ハンドル経由のpostMessage",
+      "tests": [
+        "T-73",
+        "T-73b"
+      ]
+    },
+    {
+      "id": "BRIDGE-VALIDURL",
+      "description": "超長URL・不正スキームの拒否",
+      "tests": [
+        "T-74",
+        "T-75"
+      ]
+    },
+    {
+      "id": "TABMANAGER-NAVTOKEN",
+      "description": "高速連続ナビゲーションのレース制御",
+      "tests": [
+        "T-76"
+      ]
+    },
+    {
+      "id": "SW-FAILURE",
+      "description": "SW登録失敗時のsw-failedページ遷移",
+      "tests": [
+        "T-77"
+      ]
+    },
+    {
+      "id": "FR-EN-05",
+      "description": "日本語混入の継続的検知（動的文言含む）",
+      "tests": [
+        "T-34",
+        "T-78"
+      ]
+    },
+    {
+      "id": "I18N-CUSTOM-ENGINE",
+      "description": "絵文字・サロゲートペアを含む入力の往復",
+      "tests": [
+        "T-79"
+      ]
+    },
+    {
+      "id": "SECURITY-TOP-ISOLATION",
+      "description": "プロキシ先スクリプトからのシェル内部アクセス遮断",
+      "tests": [
+        "T-80"
+      ]
+    },
+    {
+      "id": "VISUAL-REGRESSION",
+      "description": "レイアウト崩れの自動検知",
+      "tests": [
+        "V-01",
+        "V-02",
+        "V-03",
+        "V-04",
+        "V-05",
+        "V-06"
+      ]
+    },
+    {
+      "id": "A11Y-SCAN",
+      "description": "axeによる自動アクセシビリティ検査",
+      "tests": [
+        "A-01",
+        "A-02",
+        "A-03"
+      ]
+    },
+    {
+      "id": "LAUNCHER-OPEN",
+      "description": "index.htmlが新しいタブにシェルを開く",
+      "tests": [
+        "L-01"
+      ]
+    },
+    {
+      "id": "LAUNCHER-CLOAK",
+      "description": "元のタブが中立ページへ遷移する",
+      "tests": [
+        "L-02"
+      ]
+    },
+    {
+      "id": "LAUNCHER-POPUP-BLOCKED",
+      "description": "ポップアップがブロックされた場合のページ内通知（alertなし）",
+      "tests": [
+        "L-03"
+      ]
+    },
+    {
+      "id": "LAUNCHER-SW",
+      "description": "ランチャー経由でService Workerが登録される",
+      "tests": [
+        "L-04"
+      ]
+    },
+    {
+      "id": "SERVER-NO-LEGACY-ROUTE",
+      "description": "廃止した/proxy.htmlが404になる",
+      "tests": [
+        "S-01"
+      ]
+    },
+    {
+      "id": "SERVER-CWD-INDEPENDENT",
+      "description": "作業ディレクトリに依存せず静的ファイルを配信する",
+      "tests": [
+        "S-03"
+      ]
+    },
+    {
+      "id": "SERVER-NETWORK-ERRORS",
+      "description": "切断系エラーの判定とステータス",
+      "tests": [
+        "N-01",
+        "N-02",
+        "N-03",
+        "N-04"
+      ]
+    },
+    {
+      "id": "SECURITY-REACH-PATHS",
+      "description": "プロキシ先ページからシェルへの到達経路（13本中残余2本のみ）",
+      "tests": [
+        "SEC-T1",
+        "SEC-T1b"
+      ]
+    },
+    {
+      "id": "SECURITY-CSP",
+      "description": "シェルに到達されてもコードが実行できない（CSP）",
+      "tests": [
+        "SEC-T2"
+      ]
+    },
+    {
+      "id": "SECURITY-HEADERS",
+      "description": "全HTMLにCSP・nosniff等。ランチャー注入シェルでもCSP有効",
+      "tests": [
+        "SEC-T7",
+        "SEC-T7b"
+      ]
+    },
+    {
+      "id": "SECURITY-SRI",
+      "description": "全scriptにintegrity付与、改変で不実行",
+      "tests": [
+        "SEC-T5",
+        "SEC-T5b"
+      ]
+    },
+    {
+      "id": "SERVER-CREATE",
+      "description": "createServer: blockLocal・Bare v3のみ・listen/close",
+      "tests": [
+        "SRV-T1",
+        "SRV-T2",
+        "SRV-T1d-switch",
+        "SRV-T1e"
+      ]
+    },
+    {
+      "id": "SERVER-CONFIG",
+      "description": "PORT/TRUSTED_PROXYの検証",
+      "tests": [
+        "SRV-T3"
+      ]
+    },
+    {
+      "id": "SERVER-ROUTES",
+      "description": "404・ソース非公開・HTMLはCSP付きのみ",
+      "tests": [
+        "SRV-T4",
+        "SRV-T4b"
+      ]
+    },
+    {
+      "id": "SERVER-SHELL-ASSETS",
+      "description": "pages(html-transform/csp/page-registry): integrity/CSP生成とインライン検出",
+      "tests": [
+        "SRV-T6",
+        "SRV-T6b",
+        "SRV-T6c"
+      ]
+    },
+    {
+      "id": "SECURITY-BARE-GUARD",
+      "description": "/bare/ のレート制限とOrigin検査",
+      "tests": [
+        "SEC-T6",
+        "SEC-T6b",
+        "SEC-T6c",
+        "SEC-T6d"
+      ]
+    },
+    {
+      "id": "SECURITY-EXPOSURE",
+      "description": "公開面の縮小（Yoroxy非公開・ブリッジ最小・ハンドルにdocumentなし）",
+      "tests": [
+        "SEC-T3",
+        "SEC-T4",
+        "SEC-T4b"
+      ]
+    },
+    {
+      "id": "SECURITY-INTERNAL-MESSAGES",
+      "description": "内部ページ→シェルのpostMessage検証",
+      "tests": [
+        "SEC-T11a",
+        "SEC-T11b",
+        "SEC-T11c"
+      ]
+    },
+    {
+      "id": "SECURITY-FAVICON-LIMIT",
+      "description": "favicon 256KiB上限（Content-Length有無とも）",
+      "tests": [
+        "SEC-T8-ok-length",
+        "SEC-T8-ok-chunked",
+        "SEC-T8-over-length",
+        "SEC-T8-over-chunked"
+      ]
+    },
+    {
+      "id": "TAB-TITLE-LIMIT",
+      "description": "タブタイトルを512文字で切る",
+      "tests": [
+        "TAB-T2"
+      ]
+    },
+    {
+      "id": "SECURITY-ENGINE-TEMPLATE",
+      "description": "検索URLのホスト部の%sを拒否",
+      "tests": [
+        "SET-T3"
+      ]
+    },
+    {
+      "id": "SETTINGS-NAME-LIMIT",
+      "description": "検索エンジン名の上限40とmaxlengthの一致",
+      "tests": [
+        "SET-T4"
+      ]
+    },
+    {
+      "id": "TAB-RECORD",
+      "description": "タブレコードの全フィールドを宣言（暗黙フィールドなし）",
+      "tests": [
+        "TAB-T1"
+      ]
+    },
+    {
+      "id": "TEST-TRACEABILITY",
+      "description": "トレーサビリティはpass時のみ記録。launchBrowser/StrictCspの挙動差",
+      "tests": [
+        "TST-T1",
+        "TST-T2"
+      ]
+    },
+    {
+      "id": "STRUCTURE",
+      "description": "循環依存なし・削除済み機構の残存なし・boot-sealが最後",
+      "tests": [
+        "STRUCT-T1",
+        "STRUCT-T1b",
+        "STRUCT-T2",
+        "STRUCT-T3"
+      ]
+    },
+    {
+      "id": "SECURITY-UI-ISOLATION",
+      "description": "UI（sandbox iframe・opaque origin）へのスクリプト到達が全経路で不可",
+      "tests": [
+        "SEC-T10",
+        "SEC-T10b",
+        "SEC-T10c",
+        "SEC-T10d",
+        "SEC-T10e",
+        "SEC-T10f"
+      ]
+    },
+    {
+      "id": "LAUNCHER-NO-MANUAL-LINK",
+      "description": "ランチャーは /container.html を手動で開く導線を出さない（失敗時は再試行のみ）",
+      "tests": [
+        "L-03",
+        "L-05"
+      ]
+    },
+    {
+      "id": "SHELL-SCROLL",
+      "description": "縦タブ・横タブでホイールスクロールが効く（トースト表示中・メニューを閉じた後も）",
+      "tests": [
+        "SCR-T1-horizontal",
+        "SCR-T1-vertical",
+        "SCR-T2-horizontal",
+        "SCR-T2-vertical",
+        "SCR-T3"
+      ]
+    },
+    {
+      "id": "TOAST-DISMISS",
+      "description": "トーストは×ボタン・Escで手動で消せる。ホバー中は消えない",
+      "tests": [
+        "TOAST-T1",
+        "TOAST-T1b"
+      ]
+    },
+    {
+      "id": "TOAST-BACKGROUND",
+      "description": "UIがページ領域に重ならない（切り抜きなし・透明背景・トーストはレイアウト内の帯）",
+      "tests": [
+        "TOAST-T2-horizontal",
+        "TOAST-T2-vertical"
+      ]
+    },
+    {
+      "id": "SHELL-MODAL",
+      "description": "コンテキストメニュー/ドロワー表示中だけUIがページを覆う",
+      "tests": [
+        "MODAL-T1",
+        "MODAL-T2"
+      ]
+    },
+    {
+      "id": "TAB-HISTORY",
+      "description": "戻る/進むの再設計（連打・ページのhistory.*・同一ドキュメント・リダイレクト・複製）",
+      "tests": [
+        "T-06u",
+        "HIST-T1",
+        "HIST-T2",
+        "HIST-T3",
+        "HIST-T4",
+        "HIST-T5",
+        "HIST-T6",
+        "HIST-T7"
+      ]
+    },
+    {
+      "id": "NEWWINDOW-HANDLE-LOCATION",
+      "description": "window.open()のハンドルに対するw.locationがページのスクリプトで使える",
+      "tests": [
+        "OPEN-T1"
+      ]
+    },
+    {
+      "id": "REFACTOR-STRUCTURE",
+      "description": "スクリプト読込順とディレクトリ依存規則",
+      "tests": [
+        "R-STR-01",
+        "R-STR-02"
+      ]
+    },
+    {
+      "id": "REFACTOR-DOCS",
+      "description": "コード中の *.md 参照が実在する",
+      "tests": [
+        "R-DOC-01"
+      ]
+    },
+    {
+      "id": "REFACTOR-VENDOR",
+      "description": "同梱UVがチェックサムと一致する",
+      "tests": [
+        "R-SUP-01"
+      ]
+    },
+    {
+      "id": "REFACTOR-SSRF-DEFAULT",
+      "description": "本番入口はテスト専用スイッチを渡さず、既定でローカル宛を拒否する",
+      "tests": [
+        "R-SEC-04"
+      ]
+    },
+    {
+      "id": "REFACTOR-STATIC-ALLOWLIST",
+      "description": "静的配信は /assets と /uv のみ(allow-list)",
+      "tests": [
+        "R-SEC-01",
+        "R-SEC-01b"
+      ]
+    },
+    {
+      "id": "REFACTOR-CSP-STYLE",
+      "description": "CSPに style 'unsafe-inline' がなく、ヘッダーとmetaが一致する",
+      "tests": [
+        "R-SEC-02"
+      ]
+    },
+    {
+      "id": "REFACTOR-ERROR-FORMAT",
+      "description": "ルーティング例外はJSONの500で応答する",
+      "tests": [
+        "R-ERR-01"
+      ]
+    },
+    {
+      "id": "REFACTOR-LOG-SECRETS",
+      "description": "不正リクエストの生バイトをログに出さない",
+      "tests": [
+        "R-LOG-01"
+      ]
+    },
+    {
+      "id": "REFACTOR-CONFIG-VALIDATION",
+      "description": "PORT・TRUSTED_PROXY・HOSTの境界値検証",
+      "tests": [
+        "R-VAL-01"
+      ]
+    },
+    {
+      "id": "REFACTOR-UNITS",
+      "description": "ブラウザ側の純ロジック(truncate/validators/tab-view/toast/engine id/tab-registry/tab-traversal)",
+      "tests": [
+        "R-UNIT-01",
+        "R-UNIT-02",
+        "R-UNIT-03",
+        "R-UNIT-04",
+        "R-UNIT-05",
+        "R-UNIT-06",
+        "R-UNIT-06b",
+        "R-UNIT-07",
+        "R-UNIT-07b",
+        "R-UNIT-07c",
+        "R-UNIT-07d"
+      ]
+    },
+    {
+      "id": "REFACTOR-HANDLE-ORIGIN",
+      "description": "window.openハンドルのpostMessageが注入シェルでも届く",
+      "tests": [
+        "R-INT-01"
+      ]
+    }
+  ]
+}

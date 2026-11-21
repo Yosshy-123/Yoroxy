@@ -1,0 +1,205 @@
+/* =========================
+   Design Tokens (shared by the shell and all internal pages)
+========================= */
+
+:root {
+  color-scheme: light dark;
+
+  /* layout */
+  --radius: 14px;
+  --radius-sm: 8px;
+
+  /* motion */
+  --ease: cubic-bezier(.2, .9, .3, 1);
+  --dur-base: 320ms;
+  --dur-fast: 140ms;
+
+  /* type */
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* =================
+     Light Theme
+  ================= */
+
+  /* background */
+  --color-bg-base: #f6f9fc;
+  --color-bg-subtle: #eef4fb;
+  --color-bg-elevated: #ffffff;
+
+  /* text */
+  --color-text-primary: #0b1220;
+  --color-text-secondary: #6b7280;
+  /* --color-text-secondary doesn't quite reach 4.5:1 against the lightest
+   * subtle-background surfaces (e.g. an unselected segmented-control
+   * option); this variant does, verified against that specific bg. */
+  --color-text-tertiary-on-subtle: #5d6675;
+
+  /* brand */
+  --color-accent: #4f9cff;
+  --color-accent-strong: #2d7be6;
+  /* Darker, WCAG-AA-safe variants for text/fill combinations that
+   * --color-accent-strong itself doesn't have enough contrast for (white
+   * text on a solid fill; colored text on a light tinted chip). Verified
+   * against their actual use sites: >=4.5:1 for normal-size text. */
+  --color-accent-solid: #1f5aa8;
+  --color-accent-text-on-tint: #1f5aa8;
+
+  /* status */
+  --color-danger: #d92d20;
+
+  /* glass */
+  --color-glass-bg: rgba(255, 255, 255, 0.72);
+  --color-glass-border: rgba(255, 255, 255, 0.4);
+
+  /* effects */
+  --shadow-soft: 0 8px 28px rgba(16, 24, 40, 0.06);
+  --shadow-strong: 0 20px 60px rgba(16, 24, 40, 0.08);
+  --shadow-pop: 0 12px 32px rgba(16, 24, 40, 0.18);
+
+  /* derived (follow whichever theme is active) */
+  --color-border: color-mix(in srgb, var(--color-text-primary) 13%, transparent);
+  --color-hover: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  --color-pressed: color-mix(in srgb, var(--color-text-primary) 14%, transparent);
+  --color-selected: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  --focus-ring: 2px solid var(--color-accent-strong);
+}
+
+/* =========================
+   Dark Theme
+========================= */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* background */
+    --color-bg-base: #071026;
+    --color-bg-subtle: #07152a;
+    --color-bg-elevated: #0b162f;
+
+    /* text */
+    --color-text-primary: #e6eef8;
+    --color-text-secondary: #9aa3b2;
+    --color-text-tertiary-on-subtle: #9aa3b2; /* dark mode wasn't found to need a separate value */
+
+    /* brand */
+    --color-accent: #6aa8ff;
+    --color-accent-strong: #3f8cff;
+    --color-accent-solid: #1f68d6;
+    --color-accent-text-on-tint: #3f8cff; /* unchanged from --color-accent-strong: dark mode wasn't found to need a separate value */
+
+    /* status */
+    --color-danger: #f97066;
+
+    /* glass */
+    --color-glass-bg: rgba(12, 16, 24, 0.6);
+    --color-glass-border: rgba(255, 255, 255, 0.06);
+
+    /* effects */
+    --shadow-soft: 0 10px 40px rgba(0, 0, 0, 0.6);
+    --shadow-strong: 0 30px 80px rgba(0, 0, 0, 0.7);
+    --shadow-pop: 0 14px 40px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* =========================
+   Reset / Base
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+/* Deliberately no shared html/body height:100% rule here: the browser
+   shell (shell.css) is a fixed, non-scrolling single-viewport app and
+   declares its own height:100% + overflow:hidden. Internal pages like
+   Settings have normal, potentially-scrolling content and must NOT
+   inherit a hard height:100% on body — with an explicit height (rather
+   than min-height), body's own painted background is clipped to exactly
+   one viewport and then visibly repeats/tiles as the page scrolls past
+   that point (this was a real, shipped bug: the settings page's
+   background gradient had a visible seam at the one-viewport mark).
+   Pages that want a full-bleed background use `min-height: 100%` on
+   their own body rule instead, which they already do. */
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  color: var(--color-text-primary);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* =========================
+   Discord button
+   Shared by the New Tab footer and the Settings "About" section so both
+   entry points look and behave identically.
+========================= */
+
+:root {
+  --discord-brand: #5865f2;
+  --discord-brand-hover: #4752c4;
+  --discord-brand-active: #3c45a5;
+}
+
+.discord-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px 9px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--discord-brand);
+  color: #fff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+  transition: background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+.discord-btn svg {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: currentColor;
+}
+
+.discord-btn:hover {
+  background: var(--discord-brand-hover);
+  box-shadow: var(--shadow-soft);
+}
+
+.discord-btn:active {
+  background: var(--discord-brand-active);
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.discord-btn:focus-visible {
+  outline: 2px solid var(--discord-brand);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

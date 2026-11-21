@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>New Tab</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css" />
+  <link rel="stylesheet" href="/assets/css/newtab.css" />
+</head>
+<body>
+  <div class="app-root">
+    <main class="layout">
+      <section class="center-panel">
+        <div class="card" role="region" aria-labelledby="brand-title">
+          <header class="card-header">
+            <div class="brand" id="brand-title">
+              <span class="text">Yoroxy</span>
+            </div>
+          </header>
+
+          <div class="search-area">
+            <form id="search-form" class="searchbar" role="search" autocomplete="off">
+              <div class="search-icon" aria-hidden="true"></div>
+
+              <input
+                id="search-input"
+                name="q"
+                type="search"
+                class="search-input"
+                autocapitalize="off"
+                autocomplete="off"
+                enterkeyhint="search"
+                aria-label="Search"
+                placeholder="Search or enter address"
+              />
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <a id="discord-link" class="discord-btn" target="_blank" rel="noopener noreferrer">
+        <span>Join our Discord</span>
+      </a>
+    </footer>
+  </div>
+
+  <script src="/uv/uv.bundle.js"></script>
+  <script src="/uv/uv.config.js"></script>
+  <script src="/assets/js/common/config.js"></script>
+  <script src="/assets/js/common/icons.js"></script>
+  <script src="/assets/js/common/shell-client.js"></script>
+  <script src="/assets/js/common/settings/schema.js"></script>
+  <script src="/assets/js/common/settings/persistence.js"></script>
+  <script src="/assets/js/common/settings/engines.js"></script>
+  <script src="/assets/js/common/settings/store.js"></script>
+  <script src="/assets/js/common/url-utils.js"></script>
+  <script src="/assets/js/common/sw-register.js"></script>
+  <script src="/assets/js/pages/discord-link.js"></script>
+  <script src="/assets/js/pages/newtab.js"></script>
+  <script src="/assets/js/common/boot-seal.js"></script>
+</body>
+</html>

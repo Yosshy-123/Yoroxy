@@ -1,0 +1,408 @@
+/* =========================
+   Settings page (yoroxy://settings)
+========================= */
+
+body {
+  /* min-height: 100dvh, not 100%: a percentage here only resolves against
+     html's own height, and html has no explicit height of its own (see
+     tokens.css) - so min-height:100% silently resolves to "auto" and does
+     nothing, letting body shrink-wrap its content and leaving any
+     remaining viewport uncovered (the background then repeats to fill
+     it - a real, shipped bug on both this page and the error page). A
+     viewport unit resolves directly against the real viewport regardless
+     of any ancestor's sizing, sidestepping that whole chain. */
+  min-height: 100dvh;
+  background: linear-gradient(180deg, var(--color-bg-base), var(--color-bg-subtle));
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.page {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: clamp(20px, 5vw, 48px) clamp(16px, 4vw, 24px) 64px;
+}
+
+.page-header h1 {
+  margin: 0 0 20px;
+  font-size: 1.625rem;
+  letter-spacing: -0.01em;
+}
+
+.banner {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  font-size: 0.875rem;
+}
+
+.banner[hidden] {
+  display: none;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- section card ---- */
+
+.section {
+  padding: clamp(16px, 3vw, 24px);
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid var(--color-border);
+  background: var(--color-glass-bg);
+  box-shadow: var(--shadow-soft);
+  scroll-margin-top: 16px;
+}
+
+.section h2 {
+  margin: 0 0 14px;
+  font-size: 1.0625rem;
+}
+
+.section h3 {
+  margin: 0 0 12px;
+  font-size: 0.9375rem;
+}
+
+.subhead {
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.row-title {
+  font-weight: 500;
+}
+
+/*
+ * The title + action button sit on their own row (.row) so they only ever
+ * compete for space with each other; the helper text is a full-width line
+ * underneath so it never has to fight the button for horizontal room.
+ */
+.row-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row-desc {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* ---- segmented control ---- */
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+}
+
+.seg {
+  position: relative;
+  cursor: pointer;
+}
+
+.seg input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.seg span {
+  display: block;
+  padding: 6px 16px;
+  border-radius: 9px;
+  color: var(--color-text-tertiary-on-subtle);
+  font-size: 0.875rem;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.seg input:checked + span {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.18);
+}
+
+.seg input:focus-visible + span {
+  outline: var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* ---- engine list ---- */
+
+.notice {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--color-selected);
+  font-size: 0.8125rem;
+}
+
+.notice[hidden] {
+  display: none;
+}
+
+.engine-list {
+  margin: 0 0 20px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-bg-elevated);
+}
+
+.engine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.engine + .engine {
+  border-top: 1px solid var(--color-border);
+}
+
+/*
+ * Grid, not flex: the radio must sit exactly centered against the full
+ * (name + url) block, whatever its wrapped height turns out to be. A grid
+ * computes that center itself (align-self: center against the spanned
+ * rows); a flex/margin approximation would need to guess the text's
+ * rendered height and would drift by a pixel or two whenever the font,
+ * zoom level or a translation changes the line count.
+ */
+.engine-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 2px;
+  cursor: pointer;
+}
+
+.engine-main input {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+  accent-color: var(--color-accent-strong);
+}
+
+.engine-name {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.pill {
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.pill-default {
+  border-color: transparent;
+  background: var(--color-selected);
+  color: var(--color-accent-text-on-tint);
+  font-weight: 600;
+}
+
+.engine-url {
+  grid-column: 2;
+  grid-row: 2;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.engine-actions {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.engine-edit {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- forms ---- */
+
+.add-form {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-form h3 {
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.field-help {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.field-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.8125rem;
+}
+
+.field-error[hidden] {
+  display: none;
+}
+
+/* ---- buttons ---- */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.actions-end {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.btn:hover {
+  background: var(--color-hover);
+}
+
+.btn-primary {
+  border-color: transparent;
+  background: var(--color-accent-solid);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-solid);
+  filter: brightness(1.15);
+}
+
+.btn-small {
+  padding: 4px 10px;
+  font-size: 0.8125rem;
+}
+
+.btn-danger {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.btn-danger-solid {
+  border-color: transparent;
+  background: var(--color-danger);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-danger-solid:hover {
+  background: var(--color-danger);
+  filter: brightness(1.08);
+}
+
+/* ---- dialog ---- */
+
+.dialog {
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-pop);
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.dialog p {
+  margin: 0;
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en" data-tab-layout="horizontal">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yoroxy interface</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css" />
+  <link rel="stylesheet" href="/assets/css/shell.css" />
+</head>
+<body>
+  <div id="app">
+    <nav id="tabbar" class="tabbar" aria-label="Tabs">
+      <div id="tablist" class="tablist" role="tablist" aria-orientation="horizontal"></div>
+      <button id="new-tab-btn" class="new-tab-btn" type="button" title="New tab" aria-label="New tab">
+        <span class="icon" data-icon="plus"></span>
+        <span class="new-tab-label">New tab</span>
+      </button>
+    </nav>
+
+    <div id="main" class="main" data-loading="false">
+      <div id="toolbar" class="toolbar" role="toolbar" aria-label="Browser toolbar">
+        <button id="tabs-btn" class="tool-btn tabs-btn" type="button" title="Tabs" aria-label="Tabs">
+          <span class="icon" data-icon="tabs"></span>
+          <span id="tab-count" class="badge">1</span>
+        </button>
+        <button id="back-btn" class="tool-btn" type="button" title="Back" aria-label="Back" disabled>
+          <span class="icon" data-icon="back"></span>
+        </button>
+        <button id="forward-btn" class="tool-btn" type="button" title="Forward" aria-label="Forward" disabled>
+          <span class="icon" data-icon="forward"></span>
+        </button>
+        <button id="reload-btn" class="tool-btn" type="button" title="Reload" aria-label="Reload">
+          <span class="icon" data-icon="reload"></span>
+        </button>
+        <button id="home-btn" class="tool-btn" type="button" title="Home" aria-label="Home">
+          <span class="icon" data-icon="home"></span>
+        </button>
+
+        <form id="address-form" class="address-form" autocomplete="off">
+          <input
+            id="address"
+            class="address"
+            type="text"
+            aria-label="Address bar"
+            placeholder="Search or enter address"
+            autocapitalize="off"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            enterkeyhint="go"
+          />
+        </form>
+
+        <button id="settings-btn" class="tool-btn" type="button" title="Settings" aria-label="Settings">
+          <span class="icon" data-icon="settings"></span>
+        </button>
+      </div>
+      <div id="loadbar" class="loadbar" aria-hidden="true"></div>
+      <div id="toasts" class="toasts" aria-live="polite"></div>
+      <div id="content" class="content"></div>
+    </div>
+  </div>
+
+  <div id="drawer-backdrop" class="drawer-backdrop"></div>
+  <div id="ctxmenu" class="ctxmenu" role="menu" hidden></div>
+
+  <script src="/assets/js/common/config.js"></script>
+  <script src="/assets/js/common/icons.js"></script>
+  <script src="/assets/js/protocol/validators.js"></script>
+  <script src="/assets/js/protocol/ui-messages.js"></script>
+  <script src="/assets/js/protocol/ui-channel.js"></script>
+  <script src="/assets/js/ui/toast.js"></script>
+  <script src="/assets/js/ui/context-menu.js"></script>
+  <script src="/assets/js/ui/tab-bar.js"></script>
+  <script src="/assets/js/ui/toolbar.js"></script>
+  <script src="/assets/js/ui/shortcuts.js"></script>
+  <script src="/assets/js/ui/shell-ui.js"></script>
+  <script src="/assets/js/common/boot-seal.js"></script>
+</body>
+</html>

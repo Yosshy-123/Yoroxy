@@ -1,0 +1,10 @@
+# Generated on every test run; never commit these.
+reports/junit.xml
+reports/summary.json
+reports/coverage.ndjson
+reports/traceability-report.json
+reports/failures/
+reports/visual-diffs/
+
+# Baselines ARE meant to be committed (see support/visual.mjs) - only the
+# diff/failure artifacts above are transient.

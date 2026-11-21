@@ -1,0 +1,22 @@
+{
+  "note": "Baseline of the vendored Ultraviolet files. The upstream version is not recorded (see vendor/uv/UPSTREAM.md). Regenerate with: node scripts/verify-vendor.mjs --update",
+  "served": {
+    "sw.js": "0999186977463cd74ce0bddf13765c3b2ead99a6fb3f9596bc4f0aba2e020e60",
+    "uv.bundle.js": "bb9d95b6a4e7d67f6ba12314a44cea541a9380df7cbb30ed74916ea118fb4837",
+    "uv.client.js": "c16de85942557def829d9d5e6edab67e3a89f8b1b2ff8f806dcb20102800e624",
+    "uv.config.js": "3c5ceb4ab52823ca714a07b10dfa318b7f1b9d4231178cfafb51639341ff4b51",
+    "uv.handler.js": "45d56e3a16e5b25956fbc992e2201bf3288d9f3be0d51de9e369b14804ab1518",
+    "uv.sw.js": "cae6267397cfe924bffdd44f9c8f11e99ec67ce75bdba3acda16fbe2d63b8647"
+  },
+  "patch": {
+    "file": "patches/yoroxy-handler.patch",
+    "fileSha256": "4f01c02703ec0a9a8346ca1c8e7b89cddb79919db06c9c54bdb7e64ce5bb883e",
+    "blockLines": [
+      2,
+      653
+    ],
+    "blockSha256": "ca3cc461a337c2874e7c226aef4beaa4263f1c19addcdd077d6b92ce51ca3afa",
+    "tailCall": "yoroxyHarden(o);yoroxyPatch(o,e,a);",
+    "unpatchedCandidateSha256": "7e9de785f988bf0c26c6f05a4618d955bf86df4700883e68335964dd3589cfbf"
+  }
+}

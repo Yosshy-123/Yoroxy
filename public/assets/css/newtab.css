@@ -1,0 +1,180 @@
+/* =========================
+   New Tab page
+========================= */
+
+body {
+  /* height:100dvh alone fully determines this page's size (it's designed
+     to always fit one screen, never scroll); min-height:100% would be
+     ineffective anyway - see the comment on the equivalent rule in
+     settings.css - so it's omitted rather than left in as dead weight. */
+  height: 100dvh;
+  background: linear-gradient(
+    180deg,
+    var(--color-bg-base),
+    var(--color-bg-subtle)
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-root {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  padding: clamp(16px, 4vw, 32px);
+  display: flex;
+}
+
+.layout {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.center-panel {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* ---- card ---- */
+
+.card {
+  width: 100%;
+  max-width: 880px;
+  padding: clamp(16px, 3vw, 24px);
+  border-radius: calc(var(--radius) + 2px);
+
+  background: var(--color-glass-bg);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(16px) saturate(140%);
+
+  box-shadow: var(--shadow-soft);
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  transition:
+    transform var(--dur-base) var(--ease),
+    box-shadow var(--dur-base) var(--ease);
+}
+
+.card:focus-within {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-strong);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+}
+
+.brand {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-accent-strong);
+}
+
+/* ---- search ---- */
+
+.search-area {
+  width: 100%;
+}
+
+.searchbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+
+  padding: clamp(10px, 2vw, 14px);
+  border-radius: 999px;
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-elevated) 95%, transparent),
+    color-mix(in srgb, var(--color-bg-elevated) 85%, transparent)
+  );
+
+  border: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.searchbar:focus-within {
+  border-color: var(--color-accent);
+}
+
+.search-icon {
+  flex: 0 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* same muted tone as the shell's toolbar icons; follows light/dark */
+  color: var(--color-text-secondary);
+}
+
+.search-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.searchbar:focus-within .search-icon {
+  color: var(--color-accent-strong);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+
+  font: inherit;
+  font-size: clamp(15px, 2.5vw, 20px);
+  color: var(--color-text-primary);
+  min-width: 0;
+}
+
+.search-input:focus-visible {
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* ---- community link ---- */
+
+.page-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(12px, 3vw, 24px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.page-footer .discord-btn {
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .card {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .card-header {
+    margin-right: 16px;
+  }
+
+  .search-area {
+    flex: 1;
+  }
+}

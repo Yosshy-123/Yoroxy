@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yoroxy</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css" />
+  <link rel="stylesheet" href="/assets/css/container.css" />
+</head>
+<body>
+  <!-- The tab pages (proxied sites, same origin). Placed by container.js over the hole the interface leaves. -->
+  <div id="content" class="content"></div>
+
+  <!-- The browser interface. sandbox without allow-same-origin: an opaque origin that no page of this app's
+       origin can reach into (see SECURITY.md). Everything it shows or does goes through postMessage.
+       It has no src here on purpose: container.js loads it (/shell-ui.html) once it is listening, because
+       the interface announces itself as soon as it starts and an announcement nobody hears is lost. -->
+  <iframe id="ui" name="ui" class="ui-frame" title="Browser interface" sandbox="allow-scripts"></iframe>
+
+  <script src="/uv/uv.bundle.js"></script>
+  <script src="/uv/uv.config.js"></script>
+  <script src="/assets/js/common/config.js"></script>
+  <script src="/assets/js/common/text.js"></script>
+  <script src="/assets/js/common/shell-client.js"></script>
+  <script src="/assets/js/common/settings/schema.js"></script>
+  <script src="/assets/js/common/settings/persistence.js"></script>
+  <script src="/assets/js/common/settings/engines.js"></script>
+  <script src="/assets/js/common/settings/store.js"></script>
+  <script src="/assets/js/common/url-utils.js"></script>
+  <script src="/assets/js/common/sw-register.js"></script>
+  <script src="/assets/js/protocol/validators.js"></script>
+  <script src="/assets/js/protocol/ui-messages.js"></script>
+  <script src="/assets/js/protocol/ui-channel.js"></script>
+  <script src="/assets/js/container/tab-history.js"></script>
+  <script src="/assets/js/container/tab-model.js"></script>
+  <script src="/assets/js/container/tab-favicon.js"></script>
+  <script src="/assets/js/container/tab-sync-poller.js"></script>
+  <script src="/assets/js/container/tab-navigation.js"></script>
+  <script src="/assets/js/container/tab-registry.js"></script>
+  <script src="/assets/js/container/tab-traversal.js"></script>
+  <script src="/assets/js/container/tab-manager.js"></script>
+  <script src="/assets/js/container/postmessage-guard.js"></script>
+  <script src="/assets/js/container/window-handle.js"></script>
+  <script src="/assets/js/container/bridge-proxy.js"></script>
+  <script src="/assets/js/container/bridge-internal.js"></script>
+  <script src="/assets/js/container/container-sw.js"></script>
+  <script src="/assets/js/container/tab-view.js"></script>
+  <script src="/assets/js/container/toast-registry.js"></script>
+  <script src="/assets/js/container/container.js"></script>
+  <script src="/assets/js/common/boot-seal.js"></script>
+</body>
+</html>

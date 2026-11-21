@@ -1,0 +1,62 @@
+/* =========================
+   Container: hosts the sandboxed interface and the tab pages.
+   The interface (#ui) covers the whole window, never clipped. The tab pages
+   (#content) sit ABOVE it, over the hole the interface leaves, so the pages
+   get their own hit testing and scrolling (a non-rectangular clip-path on the
+   interface breaks wheel scrolling of the pages in Chromium). While the
+   interface shows a context menu or the drawer (".is-modal") it is put on top.
+========================= */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--color-bg-subtle);
+}
+
+/* Position and size are set by container.js from what the interface reports. */
+.content {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  background: var(--color-bg-base);
+}
+
+/* Hidden with visibility, never display:none: pages keep their layout. */
+.tab-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--color-bg-base);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tab-frame.is-active {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.ui-frame {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  z-index: 1;
+  /* Same colour scheme as the interface document, so the browser keeps the
+     frame transparent instead of painting it opaque. */
+  color-scheme: light dark;
+  background: transparent;
+}
+
+/* A context menu or the drawer is open: the interface covers the pages. */
+.ui-frame.is-modal {
+  z-index: 3;
+}

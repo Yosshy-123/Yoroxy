@@ -1,0 +1,661 @@
+--- a/uv.handler.js
++++ b/uv.handler.js
+@@ -1,3 +1,655 @@
+ (()=>{var f=self.Ultraviolet,R=self.UVClient,I=self.__uv$config,c=self.__uv$bareData,d=self.__uv$bareURL,v=self.__uv$cookies;if(typeof c!="object"||typeof d!="string"||typeof v!="string")throw new TypeError("Unable to load global UV data");self.__uv||p(self);self.__uvHook=p;
++/* === YOROXY PATCH BEGIN ===============================================
++ * Local modification of the vendored Ultraviolet handler.
++ * See vendor/uv/UPSTREAM.md for where the vendored files come from and how
++ * this patch is recorded and verified (npm run verify:vendor).
++ *
++ * Routes "new tab / new window" requests coming from proxied pages to the
++ * Yoroxy browser shell (window.top.__yoroxyShell). When the shell is absent
++ * (a proxied page opened on its own) everything falls back to navigating the
++ * current frame. A real browser window is never opened by this code.
++ *
++ * Parameters (closure variables of the UV handler):
++ *   o = window of the proxied document, e = Ultraviolet instance,
++ *   a = UVClient instance.
++ * ===================================================================== */
++/*
++ * yoroxyHarden(o): makes the usual ways of obtaining the shell from a proxied
++ * page's own script return something harmless. Runs for every window UV
++ * initialises (the page's own and each iframe it creates), right before
++ * yoroxyPatch.
++ *
++ *   - window.frameElement                      -> null
++ *   - Reflect.get(window, k)                   -> k in {top, parent, frameElement}
++ *   - Reflect.getOwnPropertyDescriptor(window, k)
++ *   - Object.getOwnPropertyDescriptor(window, k)
++ *   - Object.getOwnPropertyDescriptors(window)
++ *     ... all answer with the window itself (or null for frameElement)
++ *     instead of the real parent / top / frame element.
++ *
++ * What this does NOT stop: a computed property name (window['to'+'p']), which
++ * UV's source rewriting cannot see and which is not hookable while the shell
++ * and the page share an origin. That residual route is accepted and is
++ * documented in SECURITY.md (R1); the shell's CSP and its small API surface
++ * are what limit the damage. UV's own top/parent emulation is not
++ * reproduced exactly: `o` itself is returned as the safe value.
++ */
++function yoroxyHarden(o) {
++  var hasOwn = Object.prototype.hasOwnProperty;
++  // Null-prototype map: keys like 'constructor' or '__proto__' must not match.
++  var GUARDED = Object.create(null);
++  GUARDED.top = true;
++  GUARDED.parent = true;
++  GUARDED.frameElement = true;
+ 
+-function p(o){if("__uv" in o&&o.__uv instanceof f)return!1;o.document&&o.window&&o.document.querySelectorAll("script[__uv-script]").forEach(t=>t.remove());let b=!o.window,_="__uv",s="__uv$",e=new f(I),y=new f.BareClient(d,c),a=new R(o,y,b),{HTMLMediaElement:h,HTMLScriptElement:S,HTMLAudioElement:M,HTMLVideoElement:j,HTMLInputElement:H,HTMLEmbedElement:$,HTMLTrackElement:x,HTMLAnchorElement:L,HTMLIFrameElement:u,HTMLAreaElement:O,HTMLLinkElement:E,HTMLBaseElement:T,HTMLFormElement:C,HTMLImageElement:k,HTMLSourceElement:W}=o;a.nativeMethods.defineProperty(o,"__uv",{value:e,enumerable:!1}),e.meta.origin=location.origin,e.location=a.location.emulate(t=>t==="about:srcdoc"?new URL(t):(t.startsWith("blob:")&&(t=t.slice(5)),new URL(e.sourceUrl(t))),t=>e.rewriteUrl(t));let n=v;if(e.meta.url=e.location,e.domain=e.meta.url.host,e.blobUrls=new o.Map,e.referrer="",e.cookies=[],e.localStorageObj={},e.sessionStorageObj={},e.location.href==="about:srcdoc"&&(e.meta=o.parent.__uv.meta),o.EventTarget&&(e.addEventListener=o.EventTarget.prototype.addEventListener,e.removeListener=o.EventTarget.prototype.removeListener,e.dispatchEvent=o.EventTarget.prototype.dispatchEvent),a.nativeMethods.defineProperty(a.storage.storeProto,"__uv$storageObj",{get(){if(this===a.storage.sessionStorage)return e.sessionStorageObj;if(this===a.storage.localStorage)return e.localStorageObj},enumerable:!1}),o.localStorage){for(let t in o.localStorage)t.startsWith(s+e.location.origin+"@")&&(e.localStorageObj[t.slice((s+e.location.origin+"@").length)]=o.localStorage.getItem(t));e.lsWrap=a.storage.emulate(a.storage.localStorage,e.localStorageObj)} if(o.sessionStorage){for(let t in o.sessionStorage)t.startsWith(s+e.location.origin+"@")&&(e.sessionStorageObj[t.slice((s+e.location.origin+"@").length)]=o.sessionStorage.getItem(t));e.ssWrap=a.storage.emulate(a.storage.sessionStorage,e.sessionStorageObj)} let m=o.document?a.node.baseURI.get.call(o.document):o.location.href,P=e.sourceUrl(m);a.nativeMethods.defineProperty(e.meta,"base",{get(){return o.document?(a.node.baseURI.get.call(o.document)!==m&&(m=a.node.baseURI.get.call(o.document),P=e.sourceUrl(m)),P):e.meta.url.href}}),e.methods={setSource:s+"setSource",source:s+"source",location:s+"location",function:s+"function",string:s+"string",eval:s+"eval",parent:s+"parent",top:s+"top"},e.filterKeys=[_,e.methods.setSource,e.methods.source,e.methods.location,e.methods.function,e.methods.string,e.methods.eval,e.methods.parent,e.methods.top,s+"protocol",s+"storageObj",s+"url",s+"modifiedStyle",s+"config",s+"dispatched","Ultraviolet","__uvHook"],a.on("wrap",(t,r)=>{a.nativeMethods.defineProperty(r,"name",a.nativeMethods.getOwnPropertyDescriptor(t,"name")),a.nativeMethods.defineProperty(r,"length",a.nativeMethods.getOwnPropertyDescriptor(t,"length")),a.nativeMethods.defineProperty(r,e.methods.string,{enumerable:!1,value:a.nativeMethods.fnToString.call(t)}),a.nativeMethods.defineProperty(r,e.methods.function,{enumerable:!1,value:t})}),a.fetch.on("request",t=>{t.data.input=e.rewriteUrl(t.data.input)}),a.fetch.on("requestUrl",t=>{t.data.value=e.sourceUrl(t.data.value)}),a.fetch.on("responseUrl",t=>{t.data.value=e.sourceUrl(t.data.value)}),a.xhr.on("open",t=>{t.data.input=e.rewriteUrl(t.data.input)}),a.xhr.on("responseUrl",t=>{t.data.value=e.sourceUrl(t.data.value)}),a.workers.on("worker",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.workers.on("addModule",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.workers.on("importScripts",t=>{for(let r in t.data.scripts)t.data.scripts[r]=e.rewriteUrl(t.data.scripts[r])}),a.workers.on("postMessage",t=>{let r=t.data.origin;t.data.origin="*",t.data.message={__data:t.data.message,__origin:e.meta.url.origin,__to:r}}),a.navigator.on("sendBeacon",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.document.on("getCookie",t=>{t.data.value=n}),a.document.on("setCookie",t=>{e.cookie.db().then(l=>{e.cookie.setCookies(t.data.value,l,e.meta),e.cookie.getCookies(l).then(i=>{n=e.cookie.serialize(i,e.meta,!0)})});let r=e.cookie.setCookie(t.data.value)[0];r.path||(r.path="/"),r.domain||(r.domain=e.meta.url.hostname),e.cookie.validateCookie(r,e.meta,!0)&&(n.length&&(n+="; "),n+=`${r.name}=${r.value}`),t.respondWith(t.data.value)}),a.element.on("setInnerHTML",t=>{switch(t.that.tagName){case "SCRIPT":t.data.value=e.js.rewrite(t.data.value);break;case "STYLE":t.data.value=e.rewriteCSS(t.data.value);break;default:t.data.value=e.rewriteHtml(t.data.value)}}),a.element.on("getInnerHTML",t=>{switch(t.that.tagName){case "SCRIPT":t.data.value=e.js.source(t.data.value);break;default:t.data.value=e.sourceHtml(t.data.value)}}),a.element.on("setOuterHTML",t=>{t.data.value=e.rewriteHtml(t.data.value,{document:t.that.tagName==="HTML"})}),a.element.on("getOuterHTML",t=>{switch(t.that.tagName){case "HEAD":t.data.value=e.sourceHtml(t.data.value.replace(/<head(.*)>(.*)<\/head>/s,"<op-head$1>$2</op-head>")).replace(/<op-head(.*)>(.*)<\/op-head>/s,"<head$1>$2</head>");break;case "BODY":t.data.value=e.sourceHtml(t.data.value.replace(/<body(.*)>(.*)<\/body>/s,"<op-body$1>$2</op-body>")).replace(/<op-body(.*)>(.*)<\/op-body>/s,"<body$1>$2</body>");break;default:t.data.value=e.sourceHtml(t.data.value,{document:t.that.tagName==="HTML"});break}}),a.document.on("write",t=>{if(!t.data.html.length)return!1;t.data.html=[e.rewriteHtml(t.data.html.join(""))]}),a.document.on("writeln",t=>{if(!t.data.html.length)return!1;t.data.html=[e.rewriteHtml(t.data.html.join(""))]}),a.element.on("insertAdjacentHTML",t=>{t.data.html=e.rewriteHtml(t.data.html)}),a.eventSource.on("construct",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.eventSource.on("url",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.idb.on("idbFactoryOpen",t=>{t.data.name!=="__op"&&(t.data.name=`${e.meta.url.origin}@${t.data.name}`)}),a.idb.on("idbFactoryName",t=>{t.data.value=t.data.value.slice(e.meta.url.origin.length+1)}),a.history.on("replaceState",t=>{t.data.url&&(t.data.url=e.rewriteUrl(t.data.url,"__uv" in t.that?t.that.__uv.meta:e.meta))}),a.history.on("pushState",t=>{t.data.url&&(t.data.url=e.rewriteUrl(t.data.url,"__uv" in t.that?t.that.__uv.meta:e.meta))}),a.element.on("getAttribute",t=>{a.element.hasAttribute.call(t.that,e.attributePrefix+"-attr-"+t.data.name)&&t.respondWith(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name))}),a.message.on("postMessage",t=>{let r=t.data.origin,l=e.call;t.that&&(l=t.that.__uv$source.call),t.data.origin="*",t.data.message={__data:t.data.message,__origin:(t.that||t.target).__uv$source.location.origin,__to:r},t.respondWith(b?l(t.target,[t.data.message,t.data.transfer],t.that):l(t.target,[t.data.message,t.data.origin,t.data.transfer],t.that))}),a.message.on("data",t=>{let{value:r}=t.data;typeof r=="object"&&"__data" in r&&"__origin" in r&&t.respondWith(r.__data)}),a.message.on("origin",t=>{let r=a.message.messageData.get.call(t.that);typeof r=="object"&&r.__data&&r.__origin&&t.respondWith(r.__origin)}),a.overrideDescriptor(o,"origin",{get:()=>e.location.origin}),a.node.on("baseURI",t=>{t.data.value.startsWith(o.location.origin)&&(t.data.value=e.sourceUrl(t.data.value))}),a.element.on("setAttribute",t=>{if(t.that instanceof h&&t.data.name==="src"&&t.data.value.startsWith("blob:")){t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.blobUrls.get(t.data.value);return} e.attrs.isUrl(t.data.name)&&(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteUrl(t.data.value)),e.attrs.isStyle(t.data.name)&&(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteCSS(t.data.value,{context:"declarationList"})),e.attrs.isHtml(t.data.name)&&(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteHtml(t.data.value,{...e.meta,document:!0,injectHead:e.createHtmlInject(e.handlerScript,e.bundleScript,e.clientScript,e.configScript,d,c,n,o.location.href)})),e.attrs.isSrcset(t.data.name)&&(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.html.wrapSrcset(t.data.value.toString())),e.attrs.isForbidden(t.data.name)&&(t.data.name=e.attributePrefix+"-attr-"+t.data.name)}),a.element.on("audio",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.element.hookProperty([L,O,E,T],"href",{get:(t,r)=>e.sourceUrl(t.call(r)),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-href",l),t.call(r,e.rewriteUrl(l))}}),a.element.hookProperty([S,M,j,h,k,H,$,u,x,W],"src",{get:(t,r)=>e.sourceUrl(t.call(r)),set:(t,r,[l])=>{if(new String(l).toString().trim().startsWith("blob:")&&r instanceof h)return a.element.setAttribute.call(r,e.attributePrefix+"-attr-src",l),t.call(r,e.blobUrls.get(l)||l);a.element.setAttribute.call(r,e.attributePrefix+"-attr-src",l),t.call(r,e.rewriteUrl(l))}}),a.element.hookProperty([C],"action",{get:(t,r)=>e.sourceUrl(t.call(r)),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-action",l),t.call(r,e.rewriteUrl(l))}}),a.element.hookProperty([k],"srcset",{get:(t,r)=>a.element.getAttribute.call(r,e.attributePrefix+"-attr-srcset")||t.call(r),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-srcset",l),t.call(r,e.html.wrapSrcset(l.toString()))}}),a.element.hookProperty(S,"integrity",{get:(t,r)=>a.element.getAttribute.call(r,e.attributePrefix+"-attr-integrity"),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-integrity",l)}}),a.element.hookProperty(u,"sandbox",{get:(t,r)=>a.element.getAttribute.call(r,e.attributePrefix+"-attr-sandbox")||t.call(r),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-sandbox",l)}});let A=u&&Object.getOwnPropertyDescriptor(u.prototype,"contentWindow").get;function U(t){let r=A.call(t);if(!r.__uv)try{p(r)}catch(l){console.error("catastrophic failure"),console.error(l)}} if(a.element.hookProperty(u,"contentWindow",{get:(t,r)=>(U(r),t.call(r))}),a.element.hookProperty(u,"contentDocument",{get:(t,r)=>(U(r),t.call(r))}),a.element.hookProperty(u,"srcdoc",{get:(t,r)=>a.element.getAttribute.call(r,e.attributePrefix+"-attr-srcdoc")||t.call(r),set:(t,r,[l])=>{t.call(r,e.rewriteHtml(l,{document:!0,injectHead:e.createHtmlInject(e.handlerScript,e.bundleScript,e.clientScript,e.configScript,d,c,n,o.location.href)}))}}),a.node.on("getTextContent",t=>{t.that.tagName==="SCRIPT"&&(t.data.value=e.js.source(t.data.value))}),a.node.on("setTextContent",t=>{t.that.tagName==="SCRIPT"&&(t.data.value=e.js.rewrite(t.data.value))}),"serviceWorker" in o.navigator&&delete o.Navigator.prototype.serviceWorker,a.document.on("getDomain",t=>{t.data.value=e.domain}),a.document.on("setDomain",t=>{if(!t.data.value.toString().endsWith(e.meta.url.hostname.split(".").slice(-2).join(".")))return t.respondWith("");t.respondWith(e.domain=t.data.value)}),a.document.on("url",t=>{t.data.value=e.location.href}),a.document.on("documentURI",t=>{t.data.value=e.location.href}),a.document.on("referrer",t=>{t.data.value=e.referrer||e.sourceUrl(t.data.value)}),a.document.on("parseFromString",t=>{if(t.data.type!=="text/html")return!1;t.data.string=e.rewriteHtml(t.data.string,{...e.meta,document:!0})}),a.attribute.on("getValue",t=>{a.element.hasAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name)&&(t.data.value=a.element.getAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name))}),a.attribute.on("setValue",t=>{e.attrs.isUrl(t.data.name)&&(a.element.setAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteUrl(t.data.value)),e.attrs.isStyle(t.data.name)&&(a.element.setAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteCSS(t.data.value,{context:"declarationList"})),e.attrs.isHtml(t.data.name)&&(a.element.setAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteHtml(t.data.value,{...e.meta,document:!0,injectHead:e.createHtmlInject(e.handlerScript,e.bundleScript,e.clientScript,e.configScript,d,c,n,o.location.href)})),e.attrs.isSrcset(t.data.name)&&(a.element.setAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.html.wrapSrcset(t.data.value.toString()))}),a.url.on("createObjectURL",t=>{let r=t.target.call(t.that,t.data.object);if(r.startsWith("blob:"+location.origin)){let l="blob:"+(e.meta.url.href!=="about:blank"?e.meta.url.origin:o.parent.__uv.meta.url.origin)+r.slice(5+location.origin.length);e.blobUrls.set(l,r),t.respondWith(l)}else t.respondWith(r)}),a.url.on("revokeObjectURL",t=>{if(e.blobUrls.has(t.data.url)){let r=t.data.url;t.data.url=e.blobUrls.get(t.data.url),e.blobUrls.delete(r)}}),a.storage.on("get",t=>{t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("set",t=>{t.that.__uv$storageObj&&(t.that.__uv$storageObj[t.data.name]=t.data.value),t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("delete",t=>{t.that.__uv$storageObj&&delete t.that.__uv$storageObj[t.data.name],t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("getItem",t=>{t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("setItem",t=>{t.that.__uv$storageObj&&(t.that.__uv$storageObj[t.data.name]=t.data.value),t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("removeItem",t=>{t.that.__uv$storageObj&&delete t.that.__uv$storageObj[t.data.name],t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("clear",t=>{if(t.that.__uv$storageObj) for(let r of a.nativeMethods.keys.call(null,t.that.__uv$storageObj))delete t.that.__uv$storageObj[r],a.storage.removeItem.call(t.that,s+e.meta.url.origin+"@"+r),t.respondWith()}),a.storage.on("length",t=>{t.that.__uv$storageObj&&t.respondWith(a.nativeMethods.keys.call(null,t.that.__uv$storageObj).length)}),a.storage.on("key",t=>{t.that.__uv$storageObj&&t.respondWith(a.nativeMethods.keys.call(null,t.that.__uv$storageObj)[t.data.index]||null)}),a.websocket.on("websocket",async t=>{let r=Object.create(null);r.Origin=e.meta.url.origin,r["User-Agent"]=navigator.userAgent,n!==""&&(r.Cookie=n.toString()),t.respondWith(y.createWebSocket(t.data.args[0],t.data.args[1],{headers:r,readyStateHook:(l,i)=>{l.__uv$getReadyState=i},sendErrorHook:(l,i)=>{l.__uv$getSendError=i},urlHook:(l,i)=>{l.__uv$socketUrl=i},protocolHook:(l,i)=>{l.__uv$getProtocol=i},setCookiesCallback:l=>{for(let i of l)o.document.cookie=i},webSocketImpl:t.target}))}),a.websocket.on("readyState",t=>{"__uv$getReadyState" in t.that&&(t.data.value=t.that.__uv$getReadyState())}),a.websocket.on("send",t=>{if("__uv$getSendError" in t.that){let r=t.that.__uv$getSendError();if(r)throw r}}),a.websocket.on("url",t=>{"__uv$socketUrl" in t.that&&(t.data.value=t.that.__uv$socketUrl.toString())}),a.websocket.on("protocol",t=>{"__uv$getProtocol" in t.that&&(t.data.value=t.that.__uv$getProtocol())}),a.function.on("function",t=>{t.data.script=e.rewriteJS(t.data.script)}),a.function.on("toString",t=>{e.methods.string in t.that&&t.respondWith(t.that[e.methods.string])}),a.object.on("getOwnPropertyNames",t=>{t.data.names=t.data.names.filter(r=>!e.filterKeys.includes(r))}),a.object.on("getOwnPropertyDescriptors",t=>{for(let r of e.filterKeys)delete t.data.descriptors[r]}),a.style.on("setProperty",t=>{a.style.dashedUrlProps.includes(t.data.property)&&(t.data.value=e.rewriteCSS(t.data.value,{context:"value",...e.meta}))}),a.style.on("getPropertyValue",t=>{a.style.dashedUrlProps.includes(t.data.property)&&t.respondWith(e.sourceCSS(t.target.call(t.that,t.data.property),{context:"value",...e.meta}))}),"CSS2Properties" in o) for(let t of a.style.urlProps)a.overrideDescriptor(o.CSS2Properties.prototype,t,{get:(r,l)=>e.sourceCSS(r.call(l),{context:"value",...e.meta}),set:(r,l,i)=>{r.call(l,e.rewriteCSS(i,{context:"value",...e.meta}))}});else "HTMLElement" in o&&a.overrideDescriptor(o.HTMLElement.prototype,"style",{get:(t,r)=>{let l=t.call(r);if(!l[s+"modifiedStyle"]) for(let i of a.style.urlProps)a.nativeMethods.defineProperty(l,i,{enumerable:!0,configurable:!0,get(){let g=a.style.getPropertyValue.call(this,i)||"";return e.sourceCSS(g,{context:"value",...e.meta})},set(g){a.style.setProperty.call(this,a.style.propToDashed[i]||i,e.rewriteCSS(g,{context:"value",...e.meta}))}}),a.nativeMethods.defineProperty(l,s+"modifiedStyle",{enumerable:!1,value:!0});return l}});a.style.on("setCssText",t=>{t.data.value=e.rewriteCSS(t.data.value,{context:"declarationList",...e.meta})}),a.style.on("getCssText",t=>{t.data.value=e.sourceCSS(t.data.value,{context:"declarationList",...e.meta})}),e.addEventListener.call(o,"hashchange",t=>{if(t.__uv$dispatched)return!1;t.stopImmediatePropagation();let r=o.location.hash;a.history.replaceState.call(o.history,"","",t.oldURL),e.location.hash=r}),a.location.on("hashchange",(t,r,l)=>{if(l.HashChangeEvent&&a.history.replaceState){a.history.replaceState.call(o.history,"","",e.rewriteUrl(r));let i=new l.HashChangeEvent("hashchange",{newURL:r,oldURL:t});a.nativeMethods.defineProperty(i,s+"dispatched",{value:!0,enumerable:!1}),e.dispatchEvent.call(o,i)}}),a.fetch.overrideRequest(),a.fetch.overrideUrl(),a.xhr.overrideOpen(),a.xhr.overrideResponseUrl(),a.element.overrideHtml(),a.element.overrideAttribute(),a.element.overrideInsertAdjacentHTML(),a.element.overrideAudio(),a.node.overrideBaseURI(),a.node.overrideTextContent(),a.attribute.overrideNameValue(),a.document.overrideDomain(),a.document.overrideURL(),a.document.overrideDocumentURI(),a.document.overrideWrite(),a.document.overrideReferrer(),a.document.overrideParseFromString(),a.storage.overrideMethods(),a.storage.overrideLength(),a.object.overrideGetPropertyNames(),a.object.overrideGetOwnPropertyDescriptors(),a.idb.overrideName(),a.idb.overrideOpen(),a.history.overridePushState(),a.history.overrideReplaceState(),a.eventSource.overrideConstruct(),a.eventSource.overrideUrl(),a.websocket.overrideWebSocket(),a.websocket.overrideProtocol(),a.websocket.overrideURL(),a.websocket.overrideReadyState(),a.websocket.overrideProtocol(),a.websocket.overrideSend(),a.url.overrideObjectURL(),a.document.overrideCookie(),a.message.overridePostMessage(),a.message.overrideMessageOrigin(),a.message.overrideMessageData(),a.workers.overrideWorker(),a.workers.overrideAddModule(),a.workers.overrideImportScripts(),a.workers.overridePostMessage(),a.style.overrideSetGetProperty(),a.style.overrideCssText(),a.navigator.overrideSendBeacon(),a.function.overrideFunction(),a.function.overrideToString(),a.location.overrideWorkerLocation(t=>new URL(e.sourceUrl(t))),a.overrideDescriptor(o,"localStorage",{get:(t,r)=>(r||o).__uv.lsWrap}),a.overrideDescriptor(o,"sessionStorage",{get:(t,r)=>(r||o).__uv.ssWrap}),e.$wrap=function(t){return t==="location"?e.methods.location:t==="eval"?e.methods.eval:t},e.$get=function(t){return t===o.location?e.location:t===o.eval?e.eval:t===o.parent?o.__uv$parent:t===o.top?o.__uv$top:t},e.eval=a.wrap(o,"eval",(t,r,l)=>{if(!l.length||typeof l[0]!="string")return t.apply(r,l);let[i]=l;return i=e.rewriteJS(i),t.call(r,i)}),e.call=function(t,r,l){return l?t.apply(l,r):t(...r)},e.call$=function(t,r,l=[]){return t[r].apply(t,l)},a.nativeMethods.defineProperty(o.Object.prototype,_,{get:()=>e,enumerable:!1}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.setSource,{value:function(t){return a.nativeMethods.isExtensible(this)?(a.nativeMethods.defineProperty(this,e.methods.source,{value:t,writable:!0,enumerable:!1}),this):this},enumerable:!1}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.source,{value:e,writable:!0,enumerable:!1}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.location,{configurable:!0,get(){return this===o.document||this===o?e.location:this.location},set(t){this===o.document||this===o?e.location.href=t:this.location=t}}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.parent,{configurable:!0,get(){let t=this.parent;if(this===o)try{return"__uv" in t?t:this}catch{return this} return t},set(t){this.parent=t}}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.top,{configurable:!0,get(){let t=this.top;if(this===o){if(t===this.parent)return this[e.methods.parent];try{if("__uv" in t)return t;{let r=this;for(;r.parent!==t;)r=r.parent;return"__uv" in r?r:this}}catch{return this}} return t},set(t){this.top=t}}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.eval,{configurable:!0,get(){return this===o?e.eval:this.eval},set(t){this.eval=t}});}})()
+\ No newline at end of file
++  function guarded(k) {
++    return typeof k === 'string' && GUARDED[k] === true;
++  }
++  function safeValue(k) {
++    return k === 'frameElement' ? null : o;
++  }
++  function safeDescriptor(k) {
++    return { configurable: true, enumerable: true, get: function () { return safeValue(k); }, set: undefined };
++  }
++
++  try {
++    Object.defineProperty(o, 'frameElement', { configurable: false, get: function () { return null; } });
++  } catch (err) { /* already non-configurable: nothing more can be done */ }
++
++  try {
++    var R = o.Reflect;
++    var reflectGet = R.get;
++    var reflectGopd = R.getOwnPropertyDescriptor;
++    R.get = function (target, key) {
++      if (target === o && guarded(key)) return safeValue(key);
++      return reflectGet.apply(this, arguments);
++    };
++    R.getOwnPropertyDescriptor = function (target, key) {
++      if (target === o && guarded(key)) return safeDescriptor(key);
++      return reflectGopd.apply(this, arguments);
++    };
++  } catch (err) { /* ignore */ }
++
++  try {
++    var O = o.Object;
++    var objectGopd = O.getOwnPropertyDescriptor;
++    var objectGopds = O.getOwnPropertyDescriptors;
++    O.getOwnPropertyDescriptor = function (target, key) {
++      if (target === o && guarded(key)) return safeDescriptor(key);
++      return objectGopd.apply(this, arguments);
++    };
++    O.getOwnPropertyDescriptors = function (target) {
++      var all = objectGopds.apply(this, arguments);
++      if (target === o) {
++        for (var key in GUARDED) {
++          if (hasOwn.call(all, key)) all[key] = safeDescriptor(key);
++        }
++      }
++      return all;
++    };
++  } catch (err) { /* ignore */ }
++}
++
++function yoroxyPatch(o, e, a) {
++  if (!o.document || !o.window) return;
++
++  var listen = e.addEventListener || o.EventTarget.prototype.addEventListener;
++  var nativeSetTimeout = o.setTimeout;
++  var PendingMap = o.WeakMap;
++  // Native (un-hooked) attribute accessors captured by UVClient before
++  // UV overrides Element.prototype.*Attribute.
++  var getAttr = a.element.getAttribute;
++  var setAttr = a.element.setAttribute;
++  var removeAttr = a.element.removeAttribute;
++  var hasAttr = a.element.hasAttribute;
++
++  /* ---- shell access ---------------------------------------------------- */
++  function getShell() {
++    try {
++      var s = o.top.__yoroxyShell;
++      return s && typeof s.openTab === 'function' ? s : null;
++    } catch (err) {
++      return null;
++    }
++  }
++
++  // Top-most frame that belongs to the current tab (a direct child of the shell).
++  function tabTopWindow() {
++    var w = o;
++    try {
++      while (w.parent !== w && w.parent !== o.top) w = w.parent;
++    } catch (err) { /* ignore */ }
++    return w;
++  }
++
++  /* ---- user-activation bookkeeping (pop-up blocking) ------------------- */
++  var gesture = { count: 0, used: -1 };
++  ['pointerdown', 'keydown'].forEach(function (type) {
++    listen.call(o, type, function (ev) {
++      if (ev.isTrusted) gesture.count++;
++    }, true);
++  });
++
++  // true  = script may open a tab now (and the activation is consumed)
++  // false = blocked
++  // null  = navigator.userActivation is unavailable (the shell rate-limits)
++  function claimActivation() {
++    var ua = o.navigator && o.navigator.userActivation;
++    if (!ua) return null;
++    if (!ua.isActive || gesture.used === gesture.count) return false;
++    gesture.used = gesture.count;
++    return true;
++  }
++
++  /* ---- URL helpers ----------------------------------------------------- */
++  // Absolute real http(s) URL or null.
++  function toAbsolute(raw) {
++    try {
++      var u = new URL(String(raw), String(e.meta.base));
++      return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null;
++    } catch (err) {
++      return null;
++    }
++  }
++
++  function navigateWindow(w, url) {
++    var target = e.rewriteUrl(url);
++    try {
++      w.location.assign(target);
++    } catch (err) {
++      o.location.assign(target);
++    }
++  }
++
++  /* ---- target handling ------------------------------------------------- */
++  function parseTarget(raw) {
++    var t = String(raw == null ? '' : raw).trim();
++    var l = t.toLowerCase();
++    if (!t || l === '_self') return { kind: 'self' };
++    if (l === '_blank') return { kind: 'blank' };
++    if (l === '_top') return { kind: 'top' };
++    if (l === '_parent') return { kind: 'parent' };
++    return { kind: 'named', name: t };
++  }
++
++  // Raw attribute value read through the native accessor (UV's hooked
++  // getAttribute is bypassed). <base target> is honoured for `target`.
++  function elementTarget(el, attr) {
++    var t = getAttr.call(el, attr);
++    if ((t === null || t === '') && attr === 'target') {
++      var b = o.document.querySelector('base[target]');
++      if (b) t = getAttr.call(b, 'target');
++    }
++    return t;
++  }
++
++  // Maps a parsed target to an action. Anything that needs the shell falls
++  // back to 'self' (same-frame navigation) when the shell is missing.
++  function resolveMode(t, shell) {
++    if (t.kind === 'self') return 'self';
++    if (!shell) return 'self';
++    switch (t.kind) {
++      case 'blank': return 'fg';
++      case 'named': return 'named';
++      case 'top': return tabTopWindow() === o ? 'self' : 'top';
++      case 'parent': return o.parent === o || o.parent === o.top ? 'self' : 'parent';
++    }
++    return 'self';
++  }
++
++  function findFrameByName(name) {
++    var queue = [tabTopWindow()];
++    while (queue.length) {
++      var w = queue.shift();
++      try {
++        if (w.name === name) return w;
++        for (var i = 0; i < w.frames.length; i++) queue.push(w.frames[i]);
++      } catch (err) { /* inaccessible frame */ }
++    }
++    return null;
++  }
++
++  // Temporarily replaces the target attribute with _self so that the browser's
++  // own default action can never open a real window or navigate the shell.
++  // The original value is restored right after the default action started.
++  function neutralize(el, attr) {
++    var had = hasAttr.call(el, attr);
++    var old = had ? getAttr.call(el, attr) : null;
++    var done = false;
++    setAttr.call(el, attr, '_self');
++    function restore() {
++      if (done) return;
++      done = true;
++      if (had) setAttr.call(el, attr, old);
++      else removeAttr.call(el, attr);
++    }
++    nativeSetTimeout.call(o, restore, 0);
++    return restore;
++  }
++
++  /* ---- talking to the shell -------------------------------------------- */
++  function openInShell(shell, url, active, name, source, noopener) {
++    if (!shell) {
++      navigateWindow(o, url);
++      return null;
++    }
++    var userActivated = source === 'script' ? claimActivation() : true;
++    try {
++      return shell.openTab({
++        url: url,
++        active: active,
++        name: name || null,
++        opener: o,
++        noopener: !!noopener,
++        userActivated: userActivated,
++        source: source
++      });
++    } catch (err) {
++      navigateWindow(o, url);
++      return null;
++    }
++  }
++
++  function openNamed(shell, url, name, source) {
++    var frame = findFrameByName(name);
++    if (frame) {
++      navigateWindow(frame, url);
++      return null;
++    }
++    return openInShell(shell, url, true, name, source);
++  }
++
++  function runPlan(plan) {
++    var shell = getShell();
++    if (!shell) {
++      navigateWindow(o, plan.url);
++      return;
++    }
++    switch (plan.mode) {
++      case 'fg':
++      case 'bg':
++        openInShell(shell, plan.url, plan.mode === 'fg', null, plan.source);
++        return;
++      case 'named':
++        openNamed(shell, plan.url, plan.name, plan.source);
++        return;
++      case 'top':
++        navigateWindow(tabTopWindow(), plan.url);
++        return;
++      case 'parent':
++        navigateWindow(o.parent, plan.url);
++        return;
++      default:
++        navigateWindow(o, plan.url);
++    }
++  }
++
++  /* ---- links (<a>, <area>) --------------------------------------------- */
++  var pending = new PendingMap();
++
++  function pathOf(ev) {
++    return typeof ev.composedPath === 'function' ? ev.composedPath() : [ev.target];
++  }
++
++  function findLink(path) {
++    for (var i = 0; i < path.length; i++) {
++      var n = path[i];
++      if (!n || n.nodeType !== 1) continue;
++      var tag = n.localName;
++      if ((tag === 'a' || tag === 'area') &&
++          n.namespaceURI === 'http://www.w3.org/1999/xhtml' &&
++          hasAttr.call(n, 'href')) return n;
++    }
++    return null;
++  }
++
++  var NON_HTTP_HREF = /^\s*(#|javascript:|mailto:|tel:|sms:|data:|blob:|about:)/i;
++
++  function modifierMode(ev, isAux) {
++    if (isAux) return ev.button === 1 ? 'bg' : null;
++    if (ev.button !== 0 || ev.altKey) return null;
++    if (ev.shiftKey) return 'fg';
++    if (ev.ctrlKey || ev.metaKey) return 'bg';
++    return null;
++  }
++
++  function planLink(ev, isAux) {
++    var link = findLink(pathOf(ev));
++    if (!link || hasAttr.call(link, 'download')) return null;
++    if (NON_HTTP_HREF.test(getAttr.call(link, 'href') || '')) return null;
++
++    var url = toAbsolute(link.href); // hooked getter: real URL
++    if (!url) return null;
++
++    var shell = getShell();
++    var mode = modifierMode(ev, isAux);
++    if (mode) {
++      return {
++        immediate: true,
++        mode: shell ? mode : 'self',
++        url: url,
++        source: ev.isTrusted ? 'link' : 'script'
++      };
++    }
++    var t = parseTarget(elementTarget(link, 'target'));
++    if (t.kind === 'self') return null;
++    return {
++      immediate: false,
++      holder: link,
++      attr: 'target',
++      mode: resolveMode(t, shell),
++      name: t.name,
++      url: url,
++      source: ev.isTrusted ? 'link' : 'script'
++    };
++  }
++
++  function onLinkCapture(ev) {
++    if (ev.defaultPrevented) return;
++    var plan;
++    try {
++      plan = planLink(ev, ev.type === 'auxclick');
++    } catch (err) {
++      return;
++    }
++    if (!plan) return;
++    if (plan.immediate) {
++      ev.preventDefault();
++      runPlan(plan);
++      return;
++    }
++    plan.restore = neutralize(plan.holder, plan.attr);
++    pending.set(ev, plan);
++  }
++
++  // Runs after the page's own handlers, so that a page which cancels the
++  // click itself (for example onclick="window.open(...); return false") is
++  // respected.
++  function onLinkBubble(ev) {
++    var plan = pending.get(ev);
++    if (!plan) return;
++    pending.delete(ev);
++    if (ev.defaultPrevented) {
++      plan.restore();
++      return;
++    }
++    if (plan.mode === 'self') return; // default action navigates this frame
++    ev.preventDefault();
++    plan.restore();
++    runPlan(plan);
++  }
++
++  /* ---- forms ----------------------------------------------------------- */
++  function planForm(form, submitter, trusted) {
++    var holder = form;
++    var attr = 'target';
++    if (submitter && hasAttr.call(submitter, 'formtarget')) {
++      holder = submitter;
++      attr = 'formtarget';
++    }
++    var t = parseTarget(elementTarget(holder, attr));
++    if (t.kind === 'self') return null;
++    var method = (submitter && hasAttr.call(submitter, 'formmethod')
++      ? getAttr.call(submitter, 'formmethod')
++      : getAttr.call(form, 'method')) || 'get';
++    return {
++      form: form,
++      submitter: submitter || null,
++      holder: holder,
++      attr: attr,
++      mode: resolveMode(t, getShell()),
++      name: t.name,
++      method: String(method).toLowerCase(),
++      source: trusted ? 'link' : 'script'
++    };
++  }
++
++  function buildGetUrl(form, submitter) {
++    var raw = submitter && hasAttr.call(submitter, 'formaction')
++      ? e.sourceUrl(submitter.formAction)
++      : form.action; // hooked getter: real URL
++    var u = new URL(String(raw));
++    var fd;
++    try {
++      fd = submitter ? new o.FormData(form, submitter) : new o.FormData(form);
++    } catch (err) {
++      fd = new o.FormData(form);
++    }
++    var params = new o.URLSearchParams();
++    fd.forEach(function (value, key) {
++      params.append(key, typeof value === 'string' ? value : value.name);
++    });
++    u.search = params.toString();
++    return toAbsolute(u.href);
++  }
++
++  // Returns 'native' when the browser's own submission should continue (the
++  // holder's target attribute may have been re-pointed at another frame) and
++  // 'handled' when Yoroxy already took care of the navigation.
++  function handleFormPlan(plan, ev) {
++    var shell = getShell();
++    if (plan.mode === 'self' || !shell) return 'native';
++
++    if (plan.method !== 'post') {
++      var url = null;
++      try { url = buildGetUrl(plan.form, plan.submitter); } catch (err) { /* ignore */ }
++      if (!url) return 'native';
++      if (ev) ev.preventDefault();
++      plan.restore();
++      plan.url = url;
++      runPlan(plan);
++      return 'handled';
++    }
++
++    // POST: let the browser submit natively into the frame chosen below (the
++    // service worker handles the request body).
++    var frameName = null;
++    if (plan.mode === 'top') {
++      frameName = tabTopWindow().name;
++    } else if (plan.mode === 'parent') {
++      frameName = o.parent.name;
++    } else if (plan.mode === 'named') {
++      var found = findFrameByName(plan.name);
++      if (found && found.name) frameName = found.name;
++    }
++    if (!frameName && (plan.mode === 'fg' || plan.mode === 'named')) {
++      var prep = null;
++      try {
++        prep = shell.prepareFormTarget({
++          opener: o,
++          name: plan.mode === 'named' ? plan.name : null,
++          source: plan.source,
++          userActivated: claimActivation()
++        });
++      } catch (err) { /* ignore */ }
++      if (prep && prep.frameName) frameName = prep.frameName;
++    }
++    if (!frameName) {
++      if (o.console) o.console.warn('[Yoroxy] Could not open a new tab for a POST form; submitting in the current frame.');
++      return 'native';
++    }
++    setAttr.call(plan.holder, plan.attr, frameName);
++    return 'native';
++  }
++
++  function onSubmitCapture(ev) {
++    if (ev.defaultPrevented) return;
++    var form = ev.target;
++    if (!form || form.localName !== 'form') return;
++    var plan;
++    try {
++      plan = planForm(form, ev.submitter, ev.isTrusted);
++    } catch (err) {
++      return;
++    }
++    if (!plan) return;
++    plan.restore = neutralize(plan.holder, plan.attr);
++    pending.set(ev, plan);
++  }
++
++  function onSubmitBubble(ev) {
++    var plan = pending.get(ev);
++    if (!plan) return;
++    pending.delete(ev);
++    if (ev.defaultPrevented) {
++      plan.restore();
++      return;
++    }
++    handleFormPlan(plan, ev);
++  }
++
++  a.override(o.HTMLFormElement.prototype, 'submit', function (orig, form, args) {
++    var plan = null;
++    try {
++      plan = planForm(form, null, false);
++    } catch (err) { /* ignore */ }
++    if (!plan) return orig.apply(form, args);
++    plan.restore = neutralize(plan.holder, plan.attr);
++    if (handleFormPlan(plan, null) === 'handled') return undefined;
++    return orig.apply(form, args);
++  });
++
++  /* ---- window.open / window.close -------------------------------------- */
++  a.override(o, 'open', function (orig, that, args) {
++    var url = args[0];
++    var name = args[1];
++    var features = args[2];
++    var featureText = features == null ? '' : String(features).toLowerCase();
++    var noopener = /(^|[\s,])no(opener|referrer)([\s,=]|$)/.test(featureText);
++
++    var isBlank = url === undefined || url === null || String(url) === '' ||
++      String(url).toLowerCase() === 'about:blank';
++    var abs = isBlank ? 'about:blank' : toAbsolute(url);
++    if (!abs) return null; // javascript:, data:, blob: ... are not supported
++
++    var shell = getShell();
++    if (!shell) {
++      // Standalone fallback: never open a real window.
++      if (abs !== 'about:blank') navigateWindow(o, abs);
++      return null;
++    }
++
++    var nameText = name == null ? '' : String(name);
++    var t = nameText === '' ? { kind: 'blank' } : parseTarget(nameText);
++    var res = null;
++
++    if (abs !== 'about:blank' && t.kind !== 'blank' && t.kind !== 'named') {
++      // _self / _top / _parent
++      var w = t.kind === 'top' ? tabTopWindow() : (t.kind === 'parent' ? o.parent : o);
++      navigateWindow(w, abs);
++      return w;
++    }
++    if (t.kind === 'named') {
++      var frame = findFrameByName(t.name);
++      if (frame) {
++        if (abs !== 'about:blank') navigateWindow(frame, abs);
++        return frame;
++      }
++    }
++    res = openInShell(shell, abs, true, t.kind === 'named' ? t.name : null, 'script', noopener);
++    if (noopener) return null;
++    return res && res.window ? res.window : null;
++  });
++
++  a.override(o, 'close', function (orig, that, args) {
++    if (that === undefined || that === null || that === o) {
++      var shell = getShell();
++      if (shell) {
++        try { shell.closeTabOf(o); } catch (err) { /* ignore */ }
++      }
++      return undefined;
++    }
++    return orig.apply(that, args);
++  });
++
++  /* ---- history.back / forward / go ------------------------------------ */
++  /*
++   * The tab's Back / Forward are the shell's (its own history, see
++   * tab-history.js), so the page's own history.back() / forward() / go(n) are
++   * routed there too: otherwise a site's "back" button would move the frame
++   * behind the shell's back (and do nothing at all in a window that records no
++   * session history). Only the tab's own top document is affected; frames
++   * inside the page and a standalone page (no shell) keep the native behaviour.
++   * go(0) / go() is a reload and stays native.
++   */
++  function shellTraverse(that, delta) {
++    if (that !== o.history || o !== tabTopWindow()) return false;
++    var shell = getShell();
++    if (!shell || typeof shell.traverse !== 'function') return false;
++    try {
++      shell.traverse(o, delta);
++      return true;
++    } catch (err) {
++      return false;
++    }
++  }
++
++  if (o.History && o.History.prototype) {
++    a.override(o.History.prototype, 'back', function (orig, that, args) {
++      if (shellTraverse(that, -1)) return undefined;
++      return orig.apply(that, args);
++    });
++    a.override(o.History.prototype, 'forward', function (orig, that, args) {
++      if (shellTraverse(that, 1)) return undefined;
++      return orig.apply(that, args);
++    });
++    a.override(o.History.prototype, 'go', function (orig, that, args) {
++      var n = args.length ? Number(args[0]) : 0;
++      if (n && isFinite(n) && shellTraverse(that, Math.trunc(n))) return undefined;
++      return orig.apply(that, args);
++    });
++  }
++
++  /* ---- <meta http-equiv="refresh"> ------------------------------------- */
++  /*
++   * Ultraviolet renames the http-equiv attribute of every <meta> (so that a
++   * proxied page cannot set its own CSP), which also switches off the
++   * refresh / redirect form of it: the browser never sees it. Emulate that
++   * one value: wait the delay, then go to the URL (or reload the page when
++   * there is none). A zero delay is a redirect, so it replaces the page's
++   * history entry like the browser would; a longer one is a new entry.
++   */
++  var metaRefreshDone = false;
++  function runMetaRefresh() {
++    if (metaRefreshDone || !o.document) return;
++    var metas = o.document.querySelectorAll('meta');
++    for (var i = 0; i < metas.length; i++) {
++      var equiv = getAttr.call(metas[i], e.attributePrefix + '-attr-http-equiv');
++      if (equiv === null || String(equiv).trim().toLowerCase() !== 'refresh') continue;
++      var m = /^\s*(\d+(?:\.\d*)?|\.\d+)\s*(?:[;,]\s*(?:url\s*=\s*)?(?:"([^"]*)"|'([^']*)'|(.*?))\s*)?$/i
++        .exec(String(getAttr.call(metas[i], 'content') || ''));
++      if (!m) continue;
++      metaRefreshDone = true;
++      var delay = Math.min(parseFloat(m[1]) * 1000, 24 * 60 * 60 * 1000);
++      var rawUrl = m[2] !== undefined ? m[2] : (m[3] !== undefined ? m[3] : m[4]);
++      var abs = rawUrl ? toAbsolute(rawUrl) : null;
++      if (rawUrl && !abs) return; // javascript:, data: ... are not followed
++      nativeSetTimeout.call(o, function () {
++        try {
++          if (!abs) o.location.reload();
++          else if (delay < 1000) {
++            var shell = getShell();
++            try { if (shell && typeof shell.replaceNext === 'function') shell.replaceNext(o); } catch (err) { /* ignore */ }
++            o.location.replace(e.rewriteUrl(abs));
++          }
++          else o.location.assign(e.rewriteUrl(abs));
++        } catch (err) { /* the page went away */ }
++      }, delay);
++      return;
++    }
++  }
++  if (o.document) {
++    if (o.document.readyState === 'loading') listen.call(o.document, 'DOMContentLoaded', runMetaRefresh);
++    else runMetaRefresh();
++  }
++
++  /* ---- listeners (registered synchronously, not at DOMContentLoaded) --- */
++  listen.call(o, 'click', onLinkCapture, true);
++  listen.call(o, 'auxclick', onLinkCapture, true);
++  listen.call(o, 'click', onLinkBubble, false);
++  listen.call(o, 'submit', onSubmitCapture, true);
++  listen.call(o, 'submit', onSubmitBubble, false);
++}
++/* === YOROXY PATCH END ================================================== */
++
++function p(o){if("__uv" in o&&o.__uv instanceof f)return!1;o.document&&o.window&&o.document.querySelectorAll("script[__uv-script]").forEach(t=>t.remove());let b=!o.window,_="__uv",s="__uv$",e=new f(I),y=new f.BareClient(d,c),a=new R(o,y,b),{HTMLMediaElement:h,HTMLScriptElement:S,HTMLAudioElement:M,HTMLVideoElement:j,HTMLInputElement:H,HTMLEmbedElement:$,HTMLTrackElement:x,HTMLAnchorElement:L,HTMLIFrameElement:u,HTMLAreaElement:O,HTMLLinkElement:E,HTMLBaseElement:T,HTMLFormElement:C,HTMLImageElement:k,HTMLSourceElement:W}=o;a.nativeMethods.defineProperty(o,"__uv",{value:e,enumerable:!1}),e.meta.origin=location.origin,e.location=a.location.emulate(t=>t==="about:srcdoc"?new URL(t):(t.startsWith("blob:")&&(t=t.slice(5)),new URL(e.sourceUrl(t))),t=>e.rewriteUrl(t));let n=v;if(e.meta.url=e.location,e.domain=e.meta.url.host,e.blobUrls=new o.Map,e.referrer="",e.cookies=[],e.localStorageObj={},e.sessionStorageObj={},e.location.href==="about:srcdoc"&&(e.meta=o.parent.__uv.meta),o.EventTarget&&(e.addEventListener=o.EventTarget.prototype.addEventListener,e.removeListener=o.EventTarget.prototype.removeListener,e.dispatchEvent=o.EventTarget.prototype.dispatchEvent),a.nativeMethods.defineProperty(a.storage.storeProto,"__uv$storageObj",{get(){if(this===a.storage.sessionStorage)return e.sessionStorageObj;if(this===a.storage.localStorage)return e.localStorageObj},enumerable:!1}),o.localStorage){for(let t in o.localStorage)t.startsWith(s+e.location.origin+"@")&&(e.localStorageObj[t.slice((s+e.location.origin+"@").length)]=o.localStorage.getItem(t));e.lsWrap=a.storage.emulate(a.storage.localStorage,e.localStorageObj)} if(o.sessionStorage){for(let t in o.sessionStorage)t.startsWith(s+e.location.origin+"@")&&(e.sessionStorageObj[t.slice((s+e.location.origin+"@").length)]=o.sessionStorage.getItem(t));e.ssWrap=a.storage.emulate(a.storage.sessionStorage,e.sessionStorageObj)} let m=o.document?a.node.baseURI.get.call(o.document):o.location.href,P=e.sourceUrl(m);a.nativeMethods.defineProperty(e.meta,"base",{get(){return o.document?(a.node.baseURI.get.call(o.document)!==m&&(m=a.node.baseURI.get.call(o.document),P=e.sourceUrl(m)),P):e.meta.url.href}}),e.methods={setSource:s+"setSource",source:s+"source",location:s+"location",function:s+"function",string:s+"string",eval:s+"eval",parent:s+"parent",top:s+"top"},e.filterKeys=[_,e.methods.setSource,e.methods.source,e.methods.location,e.methods.function,e.methods.string,e.methods.eval,e.methods.parent,e.methods.top,s+"protocol",s+"storageObj",s+"url",s+"modifiedStyle",s+"config",s+"dispatched","Ultraviolet","__uvHook"],a.on("wrap",(t,r)=>{a.nativeMethods.defineProperty(r,"name",a.nativeMethods.getOwnPropertyDescriptor(t,"name")),a.nativeMethods.defineProperty(r,"length",a.nativeMethods.getOwnPropertyDescriptor(t,"length")),a.nativeMethods.defineProperty(r,e.methods.string,{enumerable:!1,value:a.nativeMethods.fnToString.call(t)}),a.nativeMethods.defineProperty(r,e.methods.function,{enumerable:!1,value:t})}),a.fetch.on("request",t=>{t.data.input=e.rewriteUrl(t.data.input)}),a.fetch.on("requestUrl",t=>{t.data.value=e.sourceUrl(t.data.value)}),a.fetch.on("responseUrl",t=>{t.data.value=e.sourceUrl(t.data.value)}),a.xhr.on("open",t=>{t.data.input=e.rewriteUrl(t.data.input)}),a.xhr.on("responseUrl",t=>{t.data.value=e.sourceUrl(t.data.value)}),a.workers.on("worker",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.workers.on("addModule",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.workers.on("importScripts",t=>{for(let r in t.data.scripts)t.data.scripts[r]=e.rewriteUrl(t.data.scripts[r])}),a.workers.on("postMessage",t=>{let r=t.data.origin;t.data.origin="*",t.data.message={__data:t.data.message,__origin:e.meta.url.origin,__to:r}}),a.navigator.on("sendBeacon",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.document.on("getCookie",t=>{t.data.value=n}),a.document.on("setCookie",t=>{e.cookie.db().then(l=>{e.cookie.setCookies(t.data.value,l,e.meta),e.cookie.getCookies(l).then(i=>{n=e.cookie.serialize(i,e.meta,!0)})});let r=e.cookie.setCookie(t.data.value)[0];r.path||(r.path="/"),r.domain||(r.domain=e.meta.url.hostname),e.cookie.validateCookie(r,e.meta,!0)&&(n.length&&(n+="; "),n+=`${r.name}=${r.value}`),t.respondWith(t.data.value)}),a.element.on("setInnerHTML",t=>{switch(t.that.tagName){case "SCRIPT":t.data.value=e.js.rewrite(t.data.value);break;case "STYLE":t.data.value=e.rewriteCSS(t.data.value);break;default:t.data.value=e.rewriteHtml(t.data.value)}}),a.element.on("getInnerHTML",t=>{switch(t.that.tagName){case "SCRIPT":t.data.value=e.js.source(t.data.value);break;default:t.data.value=e.sourceHtml(t.data.value)}}),a.element.on("setOuterHTML",t=>{t.data.value=e.rewriteHtml(t.data.value,{document:t.that.tagName==="HTML"})}),a.element.on("getOuterHTML",t=>{switch(t.that.tagName){case "HEAD":t.data.value=e.sourceHtml(t.data.value.replace(/<head(.*)>(.*)<\/head>/s,"<op-head$1>$2</op-head>")).replace(/<op-head(.*)>(.*)<\/op-head>/s,"<head$1>$2</head>");break;case "BODY":t.data.value=e.sourceHtml(t.data.value.replace(/<body(.*)>(.*)<\/body>/s,"<op-body$1>$2</op-body>")).replace(/<op-body(.*)>(.*)<\/op-body>/s,"<body$1>$2</body>");break;default:t.data.value=e.sourceHtml(t.data.value,{document:t.that.tagName==="HTML"});break}}),a.document.on("write",t=>{if(!t.data.html.length)return!1;t.data.html=[e.rewriteHtml(t.data.html.join(""))]}),a.document.on("writeln",t=>{if(!t.data.html.length)return!1;t.data.html=[e.rewriteHtml(t.data.html.join(""))]}),a.element.on("insertAdjacentHTML",t=>{t.data.html=e.rewriteHtml(t.data.html)}),a.eventSource.on("construct",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.eventSource.on("url",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.idb.on("idbFactoryOpen",t=>{t.data.name!=="__op"&&(t.data.name=`${e.meta.url.origin}@${t.data.name}`)}),a.idb.on("idbFactoryName",t=>{t.data.value=t.data.value.slice(e.meta.url.origin.length+1)}),a.history.on("replaceState",t=>{t.data.url&&(t.data.url=e.rewriteUrl(t.data.url,"__uv" in t.that?t.that.__uv.meta:e.meta))}),a.history.on("pushState",t=>{t.data.url&&(t.data.url=e.rewriteUrl(t.data.url,"__uv" in t.that?t.that.__uv.meta:e.meta))}),a.element.on("getAttribute",t=>{a.element.hasAttribute.call(t.that,e.attributePrefix+"-attr-"+t.data.name)&&t.respondWith(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name))}),a.message.on("postMessage",t=>{let r=t.data.origin,l=e.call;t.that&&(l=t.that.__uv$source.call),t.data.origin="*",t.data.message={__data:t.data.message,__origin:(t.that||t.target).__uv$source.location.origin,__to:r},t.respondWith(b?l(t.target,[t.data.message,t.data.transfer],t.that):l(t.target,[t.data.message,t.data.origin,t.data.transfer],t.that))}),a.message.on("data",t=>{let{value:r}=t.data;typeof r=="object"&&"__data" in r&&"__origin" in r&&t.respondWith(r.__data)}),a.message.on("origin",t=>{let r=a.message.messageData.get.call(t.that);typeof r=="object"&&r.__data&&r.__origin&&t.respondWith(r.__origin)}),a.overrideDescriptor(o,"origin",{get:()=>e.location.origin}),a.node.on("baseURI",t=>{t.data.value.startsWith(o.location.origin)&&(t.data.value=e.sourceUrl(t.data.value))}),a.element.on("setAttribute",t=>{if(t.that instanceof h&&t.data.name==="src"&&t.data.value.startsWith("blob:")){t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.blobUrls.get(t.data.value);return} e.attrs.isUrl(t.data.name)&&(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteUrl(t.data.value)),e.attrs.isStyle(t.data.name)&&(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteCSS(t.data.value,{context:"declarationList"})),e.attrs.isHtml(t.data.name)&&(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteHtml(t.data.value,{...e.meta,document:!0,injectHead:e.createHtmlInject(e.handlerScript,e.bundleScript,e.clientScript,e.configScript,d,c,n,o.location.href)})),e.attrs.isSrcset(t.data.name)&&(t.target.call(t.that,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.html.wrapSrcset(t.data.value.toString())),e.attrs.isForbidden(t.data.name)&&(t.data.name=e.attributePrefix+"-attr-"+t.data.name)}),a.element.on("audio",t=>{t.data.url=e.rewriteUrl(t.data.url)}),a.element.hookProperty([L,O,E,T],"href",{get:(t,r)=>e.sourceUrl(t.call(r)),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-href",l),t.call(r,e.rewriteUrl(l))}}),a.element.hookProperty([S,M,j,h,k,H,$,u,x,W],"src",{get:(t,r)=>e.sourceUrl(t.call(r)),set:(t,r,[l])=>{if(new String(l).toString().trim().startsWith("blob:")&&r instanceof h)return a.element.setAttribute.call(r,e.attributePrefix+"-attr-src",l),t.call(r,e.blobUrls.get(l)||l);a.element.setAttribute.call(r,e.attributePrefix+"-attr-src",l),t.call(r,e.rewriteUrl(l))}}),a.element.hookProperty([C],"action",{get:(t,r)=>e.sourceUrl(t.call(r)),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-action",l),t.call(r,e.rewriteUrl(l))}}),a.element.hookProperty([k],"srcset",{get:(t,r)=>a.element.getAttribute.call(r,e.attributePrefix+"-attr-srcset")||t.call(r),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-srcset",l),t.call(r,e.html.wrapSrcset(l.toString()))}}),a.element.hookProperty(S,"integrity",{get:(t,r)=>a.element.getAttribute.call(r,e.attributePrefix+"-attr-integrity"),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-integrity",l)}}),a.element.hookProperty(u,"sandbox",{get:(t,r)=>a.element.getAttribute.call(r,e.attributePrefix+"-attr-sandbox")||t.call(r),set:(t,r,[l])=>{a.element.setAttribute.call(r,e.attributePrefix+"-attr-sandbox",l)}});let A=u&&Object.getOwnPropertyDescriptor(u.prototype,"contentWindow").get;function U(t){let r=A.call(t);if(!r.__uv)try{p(r)}catch(l){console.error("catastrophic failure"),console.error(l)}} if(a.element.hookProperty(u,"contentWindow",{get:(t,r)=>(U(r),t.call(r))}),a.element.hookProperty(u,"contentDocument",{get:(t,r)=>(U(r),t.call(r))}),a.element.hookProperty(u,"srcdoc",{get:(t,r)=>a.element.getAttribute.call(r,e.attributePrefix+"-attr-srcdoc")||t.call(r),set:(t,r,[l])=>{t.call(r,e.rewriteHtml(l,{document:!0,injectHead:e.createHtmlInject(e.handlerScript,e.bundleScript,e.clientScript,e.configScript,d,c,n,o.location.href)}))}}),a.node.on("getTextContent",t=>{t.that.tagName==="SCRIPT"&&(t.data.value=e.js.source(t.data.value))}),a.node.on("setTextContent",t=>{t.that.tagName==="SCRIPT"&&(t.data.value=e.js.rewrite(t.data.value))}),"serviceWorker" in o.navigator&&delete o.Navigator.prototype.serviceWorker,a.document.on("getDomain",t=>{t.data.value=e.domain}),a.document.on("setDomain",t=>{if(!t.data.value.toString().endsWith(e.meta.url.hostname.split(".").slice(-2).join(".")))return t.respondWith("");t.respondWith(e.domain=t.data.value)}),a.document.on("url",t=>{t.data.value=e.location.href}),a.document.on("documentURI",t=>{t.data.value=e.location.href}),a.document.on("referrer",t=>{t.data.value=e.referrer||e.sourceUrl(t.data.value)}),a.document.on("parseFromString",t=>{if(t.data.type!=="text/html")return!1;t.data.string=e.rewriteHtml(t.data.string,{...e.meta,document:!0})}),a.attribute.on("getValue",t=>{a.element.hasAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name)&&(t.data.value=a.element.getAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name))}),a.attribute.on("setValue",t=>{e.attrs.isUrl(t.data.name)&&(a.element.setAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteUrl(t.data.value)),e.attrs.isStyle(t.data.name)&&(a.element.setAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteCSS(t.data.value,{context:"declarationList"})),e.attrs.isHtml(t.data.name)&&(a.element.setAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.rewriteHtml(t.data.value,{...e.meta,document:!0,injectHead:e.createHtmlInject(e.handlerScript,e.bundleScript,e.clientScript,e.configScript,d,c,n,o.location.href)})),e.attrs.isSrcset(t.data.name)&&(a.element.setAttribute.call(t.that.ownerElement,e.attributePrefix+"-attr-"+t.data.name,t.data.value),t.data.value=e.html.wrapSrcset(t.data.value.toString()))}),a.url.on("createObjectURL",t=>{let r=t.target.call(t.that,t.data.object);if(r.startsWith("blob:"+location.origin)){let l="blob:"+(e.meta.url.href!=="about:blank"?e.meta.url.origin:o.parent.__uv.meta.url.origin)+r.slice(5+location.origin.length);e.blobUrls.set(l,r),t.respondWith(l)}else t.respondWith(r)}),a.url.on("revokeObjectURL",t=>{if(e.blobUrls.has(t.data.url)){let r=t.data.url;t.data.url=e.blobUrls.get(t.data.url),e.blobUrls.delete(r)}}),a.storage.on("get",t=>{t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("set",t=>{t.that.__uv$storageObj&&(t.that.__uv$storageObj[t.data.name]=t.data.value),t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("delete",t=>{t.that.__uv$storageObj&&delete t.that.__uv$storageObj[t.data.name],t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("getItem",t=>{t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("setItem",t=>{t.that.__uv$storageObj&&(t.that.__uv$storageObj[t.data.name]=t.data.value),t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("removeItem",t=>{t.that.__uv$storageObj&&delete t.that.__uv$storageObj[t.data.name],t.data.name=s+e.meta.url.origin+"@"+t.data.name}),a.storage.on("clear",t=>{if(t.that.__uv$storageObj) for(let r of a.nativeMethods.keys.call(null,t.that.__uv$storageObj))delete t.that.__uv$storageObj[r],a.storage.removeItem.call(t.that,s+e.meta.url.origin+"@"+r),t.respondWith()}),a.storage.on("length",t=>{t.that.__uv$storageObj&&t.respondWith(a.nativeMethods.keys.call(null,t.that.__uv$storageObj).length)}),a.storage.on("key",t=>{t.that.__uv$storageObj&&t.respondWith(a.nativeMethods.keys.call(null,t.that.__uv$storageObj)[t.data.index]||null)}),a.websocket.on("websocket",async t=>{let r=Object.create(null);r.Origin=e.meta.url.origin,r["User-Agent"]=navigator.userAgent,n!==""&&(r.Cookie=n.toString()),t.respondWith(y.createWebSocket(t.data.args[0],t.data.args[1],{headers:r,readyStateHook:(l,i)=>{l.__uv$getReadyState=i},sendErrorHook:(l,i)=>{l.__uv$getSendError=i},urlHook:(l,i)=>{l.__uv$socketUrl=i},protocolHook:(l,i)=>{l.__uv$getProtocol=i},setCookiesCallback:l=>{for(let i of l)o.document.cookie=i},webSocketImpl:t.target}))}),a.websocket.on("readyState",t=>{"__uv$getReadyState" in t.that&&(t.data.value=t.that.__uv$getReadyState())}),a.websocket.on("send",t=>{if("__uv$getSendError" in t.that){let r=t.that.__uv$getSendError();if(r)throw r}}),a.websocket.on("url",t=>{"__uv$socketUrl" in t.that&&(t.data.value=t.that.__uv$socketUrl.toString())}),a.websocket.on("protocol",t=>{"__uv$getProtocol" in t.that&&(t.data.value=t.that.__uv$getProtocol())}),a.function.on("function",t=>{t.data.script=e.rewriteJS(t.data.script)}),a.function.on("toString",t=>{e.methods.string in t.that&&t.respondWith(t.that[e.methods.string])}),a.object.on("getOwnPropertyNames",t=>{t.data.names=t.data.names.filter(r=>!e.filterKeys.includes(r))}),a.object.on("getOwnPropertyDescriptors",t=>{for(let r of e.filterKeys)delete t.data.descriptors[r]}),a.style.on("setProperty",t=>{a.style.dashedUrlProps.includes(t.data.property)&&(t.data.value=e.rewriteCSS(t.data.value,{context:"value",...e.meta}))}),a.style.on("getPropertyValue",t=>{a.style.dashedUrlProps.includes(t.data.property)&&t.respondWith(e.sourceCSS(t.target.call(t.that,t.data.property),{context:"value",...e.meta}))}),"CSS2Properties" in o) for(let t of a.style.urlProps)a.overrideDescriptor(o.CSS2Properties.prototype,t,{get:(r,l)=>e.sourceCSS(r.call(l),{context:"value",...e.meta}),set:(r,l,i)=>{r.call(l,e.rewriteCSS(i,{context:"value",...e.meta}))}});else "HTMLElement" in o&&a.overrideDescriptor(o.HTMLElement.prototype,"style",{get:(t,r)=>{let l=t.call(r);if(!l[s+"modifiedStyle"]) for(let i of a.style.urlProps)a.nativeMethods.defineProperty(l,i,{enumerable:!0,configurable:!0,get(){let g=a.style.getPropertyValue.call(this,i)||"";return e.sourceCSS(g,{context:"value",...e.meta})},set(g){a.style.setProperty.call(this,a.style.propToDashed[i]||i,e.rewriteCSS(g,{context:"value",...e.meta}))}}),a.nativeMethods.defineProperty(l,s+"modifiedStyle",{enumerable:!1,value:!0});return l}});a.style.on("setCssText",t=>{t.data.value=e.rewriteCSS(t.data.value,{context:"declarationList",...e.meta})}),a.style.on("getCssText",t=>{t.data.value=e.sourceCSS(t.data.value,{context:"declarationList",...e.meta})}),e.addEventListener.call(o,"hashchange",t=>{if(t.__uv$dispatched)return!1;t.stopImmediatePropagation();let r=o.location.hash;a.history.replaceState.call(o.history,"","",t.oldURL),e.location.hash=r}),a.location.on("hashchange",(t,r,l)=>{if(l.HashChangeEvent&&a.history.replaceState){a.history.replaceState.call(o.history,"","",e.rewriteUrl(r));let i=new l.HashChangeEvent("hashchange",{newURL:r,oldURL:t});a.nativeMethods.defineProperty(i,s+"dispatched",{value:!0,enumerable:!1}),e.dispatchEvent.call(o,i)}}),a.fetch.overrideRequest(),a.fetch.overrideUrl(),a.xhr.overrideOpen(),a.xhr.overrideResponseUrl(),a.element.overrideHtml(),a.element.overrideAttribute(),a.element.overrideInsertAdjacentHTML(),a.element.overrideAudio(),a.node.overrideBaseURI(),a.node.overrideTextContent(),a.attribute.overrideNameValue(),a.document.overrideDomain(),a.document.overrideURL(),a.document.overrideDocumentURI(),a.document.overrideWrite(),a.document.overrideReferrer(),a.document.overrideParseFromString(),a.storage.overrideMethods(),a.storage.overrideLength(),a.object.overrideGetPropertyNames(),a.object.overrideGetOwnPropertyDescriptors(),a.idb.overrideName(),a.idb.overrideOpen(),a.history.overridePushState(),a.history.overrideReplaceState(),a.eventSource.overrideConstruct(),a.eventSource.overrideUrl(),a.websocket.overrideWebSocket(),a.websocket.overrideProtocol(),a.websocket.overrideURL(),a.websocket.overrideReadyState(),a.websocket.overrideProtocol(),a.websocket.overrideSend(),a.url.overrideObjectURL(),a.document.overrideCookie(),a.message.overridePostMessage(),a.message.overrideMessageOrigin(),a.message.overrideMessageData(),a.workers.overrideWorker(),a.workers.overrideAddModule(),a.workers.overrideImportScripts(),a.workers.overridePostMessage(),a.style.overrideSetGetProperty(),a.style.overrideCssText(),a.navigator.overrideSendBeacon(),a.function.overrideFunction(),a.function.overrideToString(),a.location.overrideWorkerLocation(t=>new URL(e.sourceUrl(t))),a.overrideDescriptor(o,"localStorage",{get:(t,r)=>(r||o).__uv.lsWrap}),a.overrideDescriptor(o,"sessionStorage",{get:(t,r)=>(r||o).__uv.ssWrap}),e.$wrap=function(t){return t==="location"?e.methods.location:t==="eval"?e.methods.eval:t},e.$get=function(t){return t===o.location?e.location:t===o.eval?e.eval:t===o.parent?o.__uv$parent:t===o.top?o.__uv$top:t},e.eval=a.wrap(o,"eval",(t,r,l)=>{if(!l.length||typeof l[0]!="string")return t.apply(r,l);let[i]=l;return i=e.rewriteJS(i),t.call(r,i)}),e.call=function(t,r,l){return l?t.apply(l,r):t(...r)},e.call$=function(t,r,l=[]){return t[r].apply(t,l)},a.nativeMethods.defineProperty(o.Object.prototype,_,{get:()=>e,enumerable:!1}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.setSource,{value:function(t){return a.nativeMethods.isExtensible(this)?(a.nativeMethods.defineProperty(this,e.methods.source,{value:t,writable:!0,enumerable:!1}),this):this},enumerable:!1}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.source,{value:e,writable:!0,enumerable:!1}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.location,{configurable:!0,get(){return this===o.document||this===o?e.location:this.location},set(t){this===o.document||this===o?e.location.href=t:this.location=t}}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.parent,{configurable:!0,get(){let t=this.parent;if(this===o)try{return"__uv" in t?t:this}catch{return this} return t},set(t){this.parent=t}}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.top,{configurable:!0,get(){let t=this.top;if(this===o){if(t===this.parent)return this[e.methods.parent];try{if("__uv" in t)return t;{let r=this;for(;r.parent!==t;)r=r.parent;return"__uv" in r?r:this}}catch{return this}} return t},set(t){this.top=t}}),a.nativeMethods.defineProperty(o.Object.prototype,e.methods.eval,{configurable:!0,get(){return this===o?e.eval:this.eval},set(t){this.eval=t}});yoroxyHarden(o);yoroxyPatch(o,e,a);}})()
+\ No newline at end of file

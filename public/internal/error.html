@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Error</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css" />
+  <link rel="stylesheet" href="/assets/css/error.css" />
+</head>
+<body>
+  <main class="panel">
+    <span class="code" id="code"></span>
+    <h1 id="heading"></h1>
+    <p id="detail"></p>
+    <div class="actions">
+      <button type="button" class="primary" id="new-tab">New tab</button>
+      <button type="button" id="reload">Reload</button>
+    </div>
+  </main>
+
+  <script src="/uv/uv.bundle.js"></script>
+  <script src="/uv/uv.config.js"></script>
+  <script src="/assets/js/common/config.js"></script>
+  <script src="/assets/js/common/shell-client.js"></script>
+  <script src="/assets/js/common/url-utils.js"></script>
+  <script src="/assets/js/common/sw-register.js"></script>
+  <script src="/assets/js/pages/error.js"></script>
+  <script src="/assets/js/common/boot-seal.js"></script>
+</body>
+</html>

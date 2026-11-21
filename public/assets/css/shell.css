@@ -1,0 +1,681 @@
+/* =========================
+   Browser shell
+   One tab bar element; html[data-tab-layout] switches horizontal / vertical.
+========================= */
+
+:root {
+  --toolbar-h: 46px;
+  --vtab-w: 240px;
+}
+
+html,
+body {
+  /* The shell is a fixed, single-viewport app (never scrolls; each tab
+     manages its own content/scrolling inside #content) - height:100% is
+     the shell's own requirement, not a shared default (see tokens.css). */
+  height: 100%;
+  overflow: hidden;
+  /* Transparent on purpose: the hole where the tab pages go must never be
+     painted by this document (it is see-through while a menu or the drawer
+     covers the pages). Only the real interface parts have a background. */
+  background: transparent;
+}
+
+#app {
+  /* Two declarations on purpose: browsers without dynamic-viewport units
+     (dvh) ignore the second one and keep the 100% fallback. */
+  height: 100%;
+  height: 100dvh;
+  display: grid;
+}
+
+/* ---- layout switch ---- */
+
+html[data-tab-layout="horizontal"] #app {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "tabs" "main";
+}
+
+html[data-tab-layout="vertical"] #app {
+  grid-template-columns: var(--vtab-w) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "tabs main";
+}
+
+.tabbar {
+  grid-area: tabs;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  background: var(--color-bg-subtle);
+}
+
+.main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  /* no background here: the toolbar, load bar and toast bar have their own,
+     and the slot for the tab pages must stay transparent */
+}
+
+/* ---- icons ---- */
+
+.icon {
+  display: inline-grid;
+  place-items: center;
+}
+
+.icon svg,
+.tab-favicon svg,
+.tab-close svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* =========================
+   Tab bar - horizontal
+========================= */
+
+html[data-tab-layout="horizontal"] .tabbar {
+  align-items: flex-end;
+  gap: 4px;
+  padding: 6px 8px 0;
+}
+
+html[data-tab-layout="horizontal"] .tablist {
+  display: flex;
+  /* Sizes to its tabs (not flex-grow) so the "+" button sits right after the
+     last tab, like a regular browser; it shrinks and scrolls when the tabs
+     no longer fit, keeping "+" visible. */
+  flex: 0 1 auto;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+html[data-tab-layout="horizontal"] .tablist::-webkit-scrollbar {
+  display: none;
+}
+
+html[data-tab-layout="horizontal"] .tab {
+  /* A definite width (not flex-basis) is what the content-sized tablist
+     measures its tabs by; they still shrink to min-width when crowded. */
+  width: 220px;
+  flex: 0 1 auto;
+  min-width: 56px;
+  height: 34px;
+  border-radius: 10px 10px 0 0;
+}
+
+html[data-tab-layout="horizontal"] .new-tab-btn {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 2px;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+html[data-tab-layout="horizontal"] .new-tab-label {
+  display: none;
+}
+
+/* =========================
+   Tab bar - vertical
+========================= */
+
+html[data-tab-layout="vertical"] .tabbar {
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 8px;
+  /* box-shadow instead of border-right: a real border is inside the
+     border-box and eats 1px of content width, throwing off the left/right
+     padding symmetry of everything inside (new-tab button, tabs). */
+  box-shadow: inset -1px 0 0 var(--color-border);
+}
+
+html[data-tab-layout="vertical"] .new-tab-btn {
+  /* follows the last tab; stays visible (below the scrolling list) when the
+     tabs overflow */
+  flex: 0 0 auto;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  justify-content: flex-start;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg-elevated);
+}
+
+html[data-tab-layout="vertical"] .tablist {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+html[data-tab-layout="vertical"] .tab {
+  flex: 0 0 auto;
+  height: 36px;
+  border-radius: 10px;
+}
+
+/* =========================
+   Tab
+========================= */
+
+.tab {
+  position: relative;
+  container-type: inline-size;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 0 10px;
+  color: var(--color-text-secondary);
+  font-size: 12.5px;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+/* Wraps just the favicon+title: this, not `.tab`, carries role="tab" (see
+   the comment in tab-ui.js's buildTab() for why the close button must be
+   a sibling rather than a descendant of it). Reproduces the flex layout
+   `.tab` used to apply directly to its favicon/title/close children. */
+.tab-hit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  border-radius: 4px;
+}
+
+.tab:hover {
+  background: var(--color-hover);
+}
+
+.tab.is-active {
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+}
+
+html[data-tab-layout="vertical"] .tab.is-active {
+  background: var(--color-selected);
+}
+
+.tab.is-active::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 0;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--color-accent-strong);
+}
+
+html[data-tab-layout="vertical"] .tab.is-active::before {
+  left: 0;
+  right: auto;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  height: auto;
+  border-radius: 0 3px 3px 0;
+}
+
+.tab.dragging {
+  opacity: 0.45;
+}
+
+html[data-tab-layout="horizontal"] .tab.drop-before { box-shadow: inset 2px 0 0 var(--color-accent-strong); }
+html[data-tab-layout="horizontal"] .tab.drop-after { box-shadow: inset -2px 0 0 var(--color-accent-strong); }
+html[data-tab-layout="vertical"] .tab.drop-before { box-shadow: inset 0 2px 0 var(--color-accent-strong); }
+html[data-tab-layout="vertical"] .tab.drop-after { box-shadow: inset 0 -2px 0 var(--color-accent-strong); }
+
+.tab-favicon {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+}
+
+.tab-favicon > * {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+}
+
+.tab-favicon img {
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+.tab-favicon svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.8;
+}
+
+.tab-favicon .spin svg {
+  animation: spin 0.8s linear infinite;
+  color: var(--color-accent-strong);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.tab-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.tab-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tab:hover .tab-close,
+.tab.is-active .tab-close,
+.tab:focus-within .tab-close {
+  opacity: 1;
+}
+
+.tab-close:hover {
+  background: var(--color-pressed);
+}
+
+@media (hover: none) {
+  .tab-close { opacity: 1; }
+}
+
+/* very narrow tabs: favicon only, close button only on the active one */
+@container (max-width: 92px) {
+  .tab-title { display: none; }
+  .tab { justify-content: center; padding: 0 4px; gap: 4px; }
+  .tab:not(.is-active) .tab-close { display: none; }
+}
+
+/* =========================
+   New tab button
+========================= */
+
+.new-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.new-tab-btn:hover {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+/* =========================
+   Toolbar
+========================= */
+
+.toolbar {
+  flex: 0 0 var(--toolbar-h);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tool-btn {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.tool-btn:hover:not(:disabled) {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.tool-btn:active:not(:disabled) {
+  background: var(--color-pressed);
+}
+
+.tool-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.tabs-btn {
+  display: none;
+}
+
+.badge {
+  position: absolute;
+  right: 1px;
+  bottom: 2px;
+  min-width: 15px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--color-accent-solid);
+  color: #fff;
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.address-form {
+  flex: 1;
+  min-width: 0;
+  margin: 0 6px;
+}
+
+.address {
+  width: 100%;
+  height: 34px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.address::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.address:focus,
+.address:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  background: var(--color-bg-elevated);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+
+/* =========================
+   Load bar
+========================= */
+
+.loadbar {
+  position: relative;
+  flex: 0 0 2px;
+  height: 2px;
+  overflow: hidden;
+  background: var(--color-bg-elevated);
+}
+
+.loadbar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 35%;
+  background: var(--color-accent-strong);
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+.main[data-loading="true"] .loadbar::after {
+  opacity: 1;
+  animation: loadbar 1.1s var(--ease) infinite;
+}
+
+@keyframes loadbar {
+  to { transform: translateX(300%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main[data-loading="true"] .loadbar::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.55;
+    transform: none;
+  }
+}
+
+/* =========================
+   Content slot
+   The tab pages are not in this document (they live in the container,
+   container.css). This empty element only reserves the space they occupy;
+   shell-ui.js reports its rectangle to the container.
+========================= */
+
+.content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* =========================
+   Toasts and context menu
+========================= */
+
+.toasts {
+  /* A bar between the toolbar and the page area: it takes room from the pages
+     instead of covering them, and is not there when there is no toast. */
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.toasts:empty {
+  display: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.toast + .toast {
+  border-top: 1px solid var(--color-border);
+}
+
+.toast-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast-action {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--color-selected);
+  color: var(--color-accent-text-on-tint);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toast-action:hover {
+  background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
+.toast-close {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary, inherit);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toast-close:hover,
+.toast-close:focus-visible {
+  background: var(--color-hover);
+  outline: none;
+}
+
+.ctxmenu {
+  position: fixed;
+  z-index: 70;
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-pop);
+}
+
+.ctxmenu[hidden] {
+  display: none;
+}
+
+.ctxmenu button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ctxmenu button:hover:not(:disabled),
+.ctxmenu button:focus-visible {
+  background: var(--color-hover);
+  outline: none;
+}
+
+.ctxmenu button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.drawer-backdrop {
+  display: none;
+}
+
+/* =========================
+   Narrow viewports
+========================= */
+
+@media (max-width: 639px) {
+  .toolbar {
+    padding: 0 4px;
+    gap: 0;
+  }
+
+  .address-form {
+    margin: 0 4px;
+  }
+
+  html[data-tab-layout="vertical"] .tabs-btn {
+    display: inline-grid;
+  }
+
+  html[data-tab-layout="vertical"] #app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "main";
+  }
+
+  /* the vertical tab bar becomes a drawer */
+  html[data-tab-layout="vertical"] .tabbar {
+    position: fixed;
+    z-index: 30;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(280px, 85vw);
+    background: var(--color-bg-subtle);
+    box-shadow: var(--shadow-pop);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform var(--dur-fast) var(--ease), visibility 0s linear var(--dur-fast);
+  }
+
+  html[data-tab-layout="vertical"][data-drawer-open] .tabbar {
+    transform: none;
+    visibility: visible;
+    transition: transform var(--dur-fast) var(--ease), visibility 0s;
+  }
+
+  html[data-tab-layout="vertical"][data-drawer-open] .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.35);
+  }
+}

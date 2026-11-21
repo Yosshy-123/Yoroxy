@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css" />
+  <link rel="stylesheet" href="/assets/css/settings.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <h1>Settings</h1>
+    </header>
+
+    <div id="storage-warning" class="banner" role="alert" hidden>
+      Settings can't be saved in this browser session. Changes will be lost when you close this tab.
+    </div>
+
+    <main class="sections">
+      <!-- Appearance -->
+      <section id="appearance" class="section" aria-labelledby="appearance-title">
+        <h2 id="appearance-title">Appearance</h2>
+
+        <div class="row">
+          <div class="row-title" id="layout-label">Tab layout</div>
+          <div class="segmented" role="radiogroup" aria-labelledby="layout-label">
+            <label class="seg">
+              <input type="radio" name="tab-layout" value="horizontal" />
+              <span>Horizontal</span>
+            </label>
+            <label class="seg">
+              <input type="radio" name="tab-layout" value="vertical" />
+              <span>Vertical</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search -->
+      <section id="search" class="section" aria-labelledby="search-title">
+        <h2 id="search-title">Search</h2>
+
+        <div class="subhead" id="engine-label">Default search engine</div>
+        <p id="engine-notice" class="notice" role="status" aria-live="polite" hidden></p>
+        <div id="engine-list" class="engine-list" role="radiogroup" aria-labelledby="engine-label"></div>
+
+        <form id="add-form" class="add-form" novalidate autocomplete="off">
+          <h3>Add search engine</h3>
+
+          <div class="field">
+            <label for="add-name">Name</label>
+            <input id="add-name" name="name" type="text" autocomplete="off" spellcheck="false" />
+            <p class="field-error" id="add-name-error" role="alert" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="add-url">Search URL</label>
+            <input id="add-url" name="template" type="text" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="https://example.com/search?q=%s" />
+            <p class="field-help">Use %s where the search terms should go. Example: https://example.com/search?q=%s</p>
+            <p class="field-error" id="add-url-error" role="alert" hidden></p>
+          </div>
+
+          <p class="field-error" id="add-general-error" role="alert" hidden></p>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary">Add</button>
+          </div>
+        </form>
+
+        <div class="actions actions-end">
+          <button type="button" id="reset-btn" class="btn btn-danger">Reset to defaults</button>
+        </div>
+      </section>
+
+      <!-- About -->
+      <section id="about" class="section" aria-labelledby="about-title">
+        <h2 id="about-title">About</h2>
+
+        <div class="row-block">
+          <div class="row">
+            <div class="row-title">Community</div>
+            <a id="discord-link" class="discord-btn" target="_blank" rel="noopener noreferrer">
+              <span>Join our Discord</span>
+            </a>
+          </div>
+          <p class="row-desc">Get help, share feedback, and talk with other Yoroxy users.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="reset-dialog" class="dialog" aria-labelledby="reset-text">
+    <form method="dialog">
+      <p id="reset-text">Reset all settings to their defaults? Custom search engines will be removed.</p>
+      <div class="actions actions-end">
+        <button type="submit" value="cancel" class="btn">Cancel</button>
+        <button type="submit" value="reset" class="btn btn-danger-solid">Reset</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/assets/js/common/config.js"></script>
+  <script src="/assets/js/common/icons.js"></script>
+  <script src="/assets/js/common/shell-client.js"></script>
+  <script src="/assets/js/common/settings/schema.js"></script>
+  <script src="/assets/js/common/settings/persistence.js"></script>
+  <script src="/assets/js/common/settings/engines.js"></script>
+  <script src="/assets/js/common/settings/store.js"></script>
+  <script src="/assets/js/pages/discord-link.js"></script>
+  <script src="/assets/js/pages/settings-engine-view.js"></script>
+  <script src="/assets/js/pages/settings.js"></script>
+  <script src="/assets/js/common/boot-seal.js"></script>
+</body>
+</html>
